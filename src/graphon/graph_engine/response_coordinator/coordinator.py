@@ -15,10 +15,13 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from graphon.enums import NodeExecutionType, NodeState
-from graphon.graph_events import NodeRunStreamChunkEvent, NodeRunSucceededEvent
+from graphon.graph_events.node import (
+    NodeRunStreamChunkEvent,
+    NodeRunSucceededEvent,
+)
 from graphon.nodes.base.template import TextSegment, VariableSegment
-from graphon.runtime import VariablePool
 from graphon.runtime.graph_runtime_state import GraphProtocol
+from graphon.runtime.variable_pool import VariablePool
 
 from .path import Path
 from .session import ResponseSession

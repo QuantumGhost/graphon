@@ -16,12 +16,13 @@ from typing import final
 from typing_extensions import override
 
 from graphon.graph_engine.entities.commands import AbortCommand, CommandType
-from graphon.graph_engine.layers import GraphEngineLayer
-from graphon.graph_events import (
-    GraphEngineEvent,
+from graphon.graph_engine.layers.base import GraphEngineLayer
+from graphon.graph_events.base import GraphEngineEvent
+from graphon.graph_events.node import (
+    NodeRunFailedEvent,
     NodeRunStartedEvent,
+    NodeRunSucceededEvent,
 )
-from graphon.graph_events.node import NodeRunFailedEvent, NodeRunSucceededEvent
 
 
 class LimitType(StrEnum):

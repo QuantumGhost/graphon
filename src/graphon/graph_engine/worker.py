@@ -16,15 +16,15 @@ from typing import final
 from typing_extensions import override
 
 from graphon.enums import WorkflowNodeExecutionStatus
-from graphon.graph import Graph
+from graphon.graph.graph import Graph
 from graphon.graph_engine.layers.base import GraphEngineLayer
-from graphon.graph_events import (
-    GraphNodeEventBase,
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.node import (
     NodeRunFailedEvent,
     NodeRunStartedEvent,
     is_node_result_event,
 )
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
 
 from .ready_queue import ReadyQueue

@@ -11,11 +11,11 @@ from graphon.enums import (
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.file import File
-from graphon.model_runtime.entities import ImagePromptMessageContent, LLMMode
-from graphon.model_runtime.entities.llm_entities import LLMResult, LLMUsage
+from graphon.file.models import File
+from graphon.model_runtime.entities.llm_entities import LLMMode, LLMResult, LLMUsage
 from graphon.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
+    ImagePromptMessageContent,
     PromptMessage,
     PromptMessageRole,
     PromptMessageTool,
@@ -27,22 +27,23 @@ from graphon.model_runtime.entities.model_entities import (
     ModelPropertyKey,
     ModelType,
 )
-from graphon.model_runtime.memory import PromptMessageMemory
+from graphon.model_runtime.memory.prompt_message_memory import PromptMessageMemory
 from graphon.model_runtime.utils.encoders import jsonable_encoder
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base import variable_template_parser
 from graphon.nodes.base.node import Node
-from graphon.nodes.llm import LLMNode, llm_utils
+from graphon.nodes.llm import llm_utils
 from graphon.nodes.llm.entities import (
     LLMNodeChatModelMessage,
     LLMNodeCompletionModelPromptTemplate,
 )
+from graphon.nodes.llm.node import LLMNode
 from graphon.nodes.llm.runtime_protocols import (
     PreparedLLMProtocol,
     PromptMessageSerializerProtocol,
 )
-from graphon.runtime import VariablePool
-from graphon.variables import build_segment_with_type
+from graphon.runtime.variable_pool import VariablePool
+from graphon.variables.factory import build_segment_with_type
 from graphon.variables.types import ArrayValidation, SegmentType
 
 from .entities import ParameterExtractorNodeData
@@ -71,8 +72,8 @@ from .prompts import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
-    from graphon.runtime import GraphRuntimeState
+    from graphon.entities.graph_init_params import GraphInitParams
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 def extract_json(text):

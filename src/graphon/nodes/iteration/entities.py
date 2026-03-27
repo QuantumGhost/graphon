@@ -5,7 +5,10 @@ from pydantic import Field
 
 from graphon.entities.base_node_data import BaseNodeData
 from graphon.enums import BuiltinNodeTypes, NodeType
-from graphon.nodes.base import BaseIterationNodeData, BaseIterationState
+from graphon.nodes.base.entities import (
+    BaseIterationNodeData,
+    BaseIterationState,
+)
 
 
 class ErrorHandleMode(StrEnum):

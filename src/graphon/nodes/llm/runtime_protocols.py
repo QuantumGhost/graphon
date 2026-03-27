@@ -3,15 +3,18 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any, Protocol
 
-from graphon.file import File
-from graphon.model_runtime.entities import LLMMode, PromptMessage
+from graphon.file.models import File
 from graphon.model_runtime.entities.llm_entities import (
+    LLMMode,
     LLMResult,
     LLMResultChunk,
     LLMResultChunkWithStructuredOutput,
     LLMResultWithStructuredOutput,
 )
-from graphon.model_runtime.entities.message_entities import PromptMessageTool
+from graphon.model_runtime.entities.message_entities import (
+    PromptMessage,
+    PromptMessageTool,
+)
 from graphon.model_runtime.entities.model_entities import AIModelEntity
 
 

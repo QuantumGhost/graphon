@@ -8,8 +8,11 @@ from graphon.graph_events.node import (
 )
 from graphon.nodes.variable_assigner.v2.enums import InputType, Operation
 from graphon.nodes.variable_assigner.v2.node import VariableAssignerNode
-from graphon.runtime import GraphRuntimeState
-from graphon.variables import ArrayStringVariable, StringVariable
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.variables.variables import (
+    ArrayStringVariable,
+    StringVariable,
+)
 
 from ...helpers import build_graph_init_params, build_variable_pool
 

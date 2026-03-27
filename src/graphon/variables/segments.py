@@ -5,7 +5,7 @@ from typing import Annotated, Any, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Discriminator, Tag, field_validator
 
-from graphon.file import File
+from graphon.file.models import File
 
 from .types import SegmentType
 

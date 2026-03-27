@@ -3,33 +3,34 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any
 
-from graphon.entities import GraphInitParams
 from graphon.entities.graph_config import NodeConfigDict
+from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import (
     BuiltinNodeTypes,
     NodeExecutionType,
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.model_runtime.entities import (
+from graphon.model_runtime.entities.llm_entities import (
     LLMMode,
     LLMUsage,
-    ModelPropertyKey,
-    PromptMessageRole,
 )
-from graphon.model_runtime.memory import PromptMessageMemory
+from graphon.model_runtime.entities.message_entities import PromptMessageRole
+from graphon.model_runtime.entities.model_entities import ModelPropertyKey
+from graphon.model_runtime.memory.prompt_message_memory import PromptMessageMemory
 from graphon.model_runtime.utils.encoders import jsonable_encoder
-from graphon.node_events import ModelInvokeCompletedEvent, NodeRunResult
+from graphon.node_events.base import NodeRunResult
+from graphon.node_events.node import ModelInvokeCompletedEvent
 from graphon.nodes.base.entities import VariableSelector
 from graphon.nodes.base.node import Node
 from graphon.nodes.base.variable_template_parser import VariableTemplateParser
-from graphon.nodes.llm import (
-    LLMNode,
+from graphon.nodes.llm import llm_utils
+from graphon.nodes.llm.entities import (
     LLMNodeChatModelMessage,
     LLMNodeCompletionModelPromptTemplate,
-    llm_utils,
 )
 from graphon.nodes.llm.file_saver import LLMFileSaver
+from graphon.nodes.llm.node import LLMNode
 from graphon.nodes.llm.runtime_protocols import (
     PreparedLLMProtocol,
     PromptMessageSerializerProtocol,
@@ -52,7 +53,7 @@ from .template_prompts import (
 
 if TYPE_CHECKING:
     from graphon.file.models import File
-    from graphon.runtime import GraphRuntimeState
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 class _PassthroughPromptMessageSerializer:

@@ -6,19 +6,18 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from graphon.file import FileType, file_manager
+from graphon.file import file_manager
+from graphon.file.enums import FileType
 from graphon.file.models import File
-from graphon.model_runtime.entities import (
+from graphon.model_runtime.entities.message_entities import (
+    AssistantPromptMessage,
     ImagePromptMessageContent,
     PromptMessage,
     PromptMessageContentType,
-    PromptMessageRole,
-    TextPromptMessageContent,
-)
-from graphon.model_runtime.entities.message_entities import (
-    AssistantPromptMessage,
     PromptMessageContentUnionTypes,
+    PromptMessageRole,
     SystemPromptMessage,
+    TextPromptMessageContent,
     UserPromptMessage,
 )
 from graphon.model_runtime.entities.model_entities import (
@@ -26,17 +25,21 @@ from graphon.model_runtime.entities.model_entities import (
     ModelFeature,
     ModelPropertyKey,
 )
-from graphon.model_runtime.memory import PromptMessageMemory
+from graphon.model_runtime.memory.prompt_message_memory import PromptMessageMemory
 from graphon.nodes.base.entities import VariableSelector
-from graphon.runtime import VariablePool
+from graphon.prompt_entities import MemoryConfig
+from graphon.runtime.variable_pool import VariablePool
 from graphon.template_rendering import Jinja2TemplateRenderer
-from graphon.variables import ArrayFileSegment, FileSegment
-from graphon.variables.segments import ArrayAnySegment, NoneSegment
+from graphon.variables.segments import (
+    ArrayAnySegment,
+    ArrayFileSegment,
+    FileSegment,
+    NoneSegment,
+)
 
 from .entities import (
     LLMNodeChatModelMessage,
     LLMNodeCompletionModelPromptTemplate,
-    MemoryConfig,
 )
 from .exc import (
     InvalidVariableTypeError,

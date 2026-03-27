@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, cast
 from uuid import uuid4
 
-from graphon.file import File
+from graphon.file.models import File
 
 from .segments import (
     ArrayAnySegment,

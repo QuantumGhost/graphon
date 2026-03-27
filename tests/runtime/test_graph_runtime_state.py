@@ -5,11 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.runtime import (
-    GraphRuntimeState,
-    ReadOnlyGraphRuntimeStateWrapper,
-    VariablePool,
-)
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.runtime.read_only_wrappers import ReadOnlyGraphRuntimeStateWrapper
+from graphon.runtime.variable_pool import VariablePool
 from graphon.variables.variables import StringVariable
 
 CONVERSATION_VARIABLE_NODE_ID = "conversation"
@@ -114,7 +112,7 @@ class TestGraphRuntimeState:
 
         queue = state.ready_queue
 
-        from graphon.graph_engine.ready_queue import InMemoryReadyQueue
+        from graphon.graph_engine.ready_queue.in_memory import InMemoryReadyQueue
 
         assert isinstance(queue, InMemoryReadyQueue)
 

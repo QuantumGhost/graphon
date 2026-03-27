@@ -1,4 +1,4 @@
-from graphon.file import FileType
+from graphon.file.enums import FileType
 from graphon.file.file_factory import get_file_type_by_mime_type, standardize_file_type
 
 

@@ -15,29 +15,31 @@ from graphon.enums import (
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.graph_events import (
-    GraphNodeEventBase,
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.graph import (
     GraphRunAbortedEvent,
     GraphRunFailedEvent,
     GraphRunPartialSucceededEvent,
     GraphRunSucceededEvent,
 )
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.node_events import (
+from graphon.node_events.base import (
+    NodeEventBase,
+    NodeRunResult,
+)
+from graphon.node_events.iteration import (
     IterationFailedEvent,
     IterationNextEvent,
     IterationStartedEvent,
     IterationSucceededEvent,
-    NodeEventBase,
-    NodeRunResult,
-    StreamCompletedEvent,
 )
-from graphon.nodes.base import LLMUsageTrackingMixin
+from graphon.node_events.node import StreamCompletedEvent
 from graphon.nodes.base.node import Node
+from graphon.nodes.base.usage_tracking_mixin import LLMUsageTrackingMixin
 from graphon.nodes.iteration.entities import ErrorHandleMode, IterationNodeData
-from graphon.runtime import VariablePool
-from graphon.variables import IntegerVariable, NoneSegment
-from graphon.variables.segments import ArrayAnySegment, ArraySegment
+from graphon.runtime.variable_pool import VariablePool
+from graphon.variables.segments import ArrayAnySegment, ArraySegment, NoneSegment
+from graphon.variables.variables import IntegerVariable
 
 from .exc import (
     ChildGraphAbortedError,
@@ -50,7 +52,7 @@ from .exc import (
 )
 
 if TYPE_CHECKING:
-    from graphon.graph_engine import GraphEngine
+    from graphon.graph_engine.graph_engine import GraphEngine
 
 logger = logging.getLogger(__name__)
 _DEFAULT_CHILD_ABORT_REASON = "child graph aborted"
@@ -720,8 +722,8 @@ class IterationNode(LLMUsageTrackingMixin, Node[IterationNodeData]):
                         return
 
     def _create_graph_engine(self, index: int, item: object):
-        from graphon.entities import GraphInitParams
-        from graphon.runtime import ChildGraphNotFoundError
+        from graphon.entities.graph_init_params import GraphInitParams
+        from graphon.runtime.graph_runtime_state import ChildGraphNotFoundError
 
         # Create GraphInitParams for child graph execution.
         graph_init_params = GraphInitParams(

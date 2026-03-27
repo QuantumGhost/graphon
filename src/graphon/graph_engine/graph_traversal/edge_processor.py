@@ -6,8 +6,9 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, final
 
 from graphon.enums import NodeExecutionType
-from graphon.graph import Edge, Graph
-from graphon.graph_events import NodeRunStreamChunkEvent
+from graphon.graph.edge import Edge
+from graphon.graph.graph import Graph
+from graphon.graph_events.node import NodeRunStreamChunkEvent
 
 from ..graph_state_manager import GraphStateManager
 from ..response_coordinator import ResponseStreamCoordinator

@@ -1,24 +1,30 @@
 from collections.abc import Generator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, cast
 
-from graphon.entities import GraphInitParams
 from graphon.entities.graph_config import NodeConfigDict
+from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.node_events import (
+from graphon.node_events.base import (
     NodeEventBase,
     NodeRunResult,
+)
+from graphon.node_events.node import (
     StreamCompletedEvent,
     VariableUpdatedEvent,
 )
 from graphon.nodes.base.node import Node
 from graphon.nodes.variable_assigner.common import helpers as common_helpers
 from graphon.nodes.variable_assigner.common.exc import VariableOperatorNodeError
-from graphon.variables import SegmentType, Variable, VariableBase
+from graphon.variables.types import SegmentType
+from graphon.variables.variables import (
+    Variable,
+    VariableBase,
+)
 
 from .node_data import VariableAssignerData, WriteMode
 
 if TYPE_CHECKING:
-    from graphon.runtime import GraphRuntimeState
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 class VariableAssignerNode(Node[VariableAssignerData]):

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from graphon.model_runtime.entities import PromptMessage
+from graphon.model_runtime.entities.message_entities import PromptMessage
 
 DEFAULT_MEMORY_MAX_TOKEN_LIMIT = 2000
 

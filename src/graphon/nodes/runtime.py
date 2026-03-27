@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from graphon.nodes.human_input.entities import HumanInputNodeData
     from graphon.nodes.human_input.enums import HumanInputFormStatus
     from graphon.nodes.tool.entities import ToolNodeData
-    from graphon.runtime import VariablePool
+    from graphon.runtime.variable_pool import VariablePool
 
 
 class ToolNodeRuntimeProtocol(Protocol):

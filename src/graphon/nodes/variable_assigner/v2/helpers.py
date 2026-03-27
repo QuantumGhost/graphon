@@ -1,6 +1,6 @@
 from typing import Any
 
-from graphon.variables import SegmentType
+from graphon.variables.types import SegmentType
 
 from .enums import Operation
 

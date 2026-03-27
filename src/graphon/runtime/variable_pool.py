@@ -8,17 +8,17 @@ from typing import Annotated, Any, Union, cast
 
 from pydantic import BaseModel, Field, model_validator
 
-from graphon.file import File, FileAttribute, file_manager
-from graphon.variables import (
-    Segment,
-    SegmentGroup,
-    VariableBase,
+from graphon.file import file_manager
+from graphon.file.enums import FileAttribute
+from graphon.file.models import File
+from graphon.variables.consts import SELECTORS_LENGTH
+from graphon.variables.factory import (
     build_segment,
     segment_to_variable,
 )
-from graphon.variables.consts import SELECTORS_LENGTH
-from graphon.variables.segments import FileSegment, ObjectSegment
-from graphon.variables.variables import RAGPipelineVariableInput, Variable
+from graphon.variables.segment_group import SegmentGroup
+from graphon.variables.segments import FileSegment, ObjectSegment, Segment
+from graphon.variables.variables import RAGPipelineVariableInput, Variable, VariableBase
 
 VariableValue = Union[str, int, float, dict[str, object], list[object], File]
 

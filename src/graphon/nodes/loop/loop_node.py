@@ -12,40 +12,42 @@ from graphon.enums import (
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.graph_events import (
-    GraphNodeEventBase,
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.graph import (
     GraphRunAbortedEvent,
     GraphRunFailedEvent,
-    NodeRunSucceededEvent,
 )
+from graphon.graph_events.node import NodeRunSucceededEvent
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.node_events import (
+from graphon.node_events.base import (
+    NodeEventBase,
+    NodeRunResult,
+)
+from graphon.node_events.loop import (
     LoopFailedEvent,
     LoopNextEvent,
     LoopStartedEvent,
     LoopSucceededEvent,
-    NodeEventBase,
-    NodeRunResult,
-    StreamCompletedEvent,
 )
-from graphon.nodes.base import LLMUsageTrackingMixin
+from graphon.node_events.node import StreamCompletedEvent
 from graphon.nodes.base.node import Node
+from graphon.nodes.base.usage_tracking_mixin import LLMUsageTrackingMixin
 from graphon.nodes.loop.entities import (
     LoopCompletedReason,
     LoopNodeData,
     LoopVariableData,
 )
 from graphon.utils.condition.processor import ConditionProcessor
-from graphon.variables import (
-    Segment,
-    SegmentType,
+from graphon.variables.factory import (
     TypeMismatchError,
     build_segment_with_type,
     segment_to_variable,
 )
+from graphon.variables.segments import Segment
+from graphon.variables.types import SegmentType
 
 if TYPE_CHECKING:
-    from graphon.graph_engine import GraphEngine
+    from graphon.graph_engine.graph_engine import GraphEngine
 
 logger = logging.getLogger(__name__)
 _DEFAULT_CHILD_ABORT_REASON = "child graph aborted"
@@ -508,7 +510,7 @@ class LoopNode(LLMUsageTrackingMixin, Node[LoopNodeData]):
             return build_segment_with_type(var_type, value)
 
     def _create_graph_engine(self, start_at: datetime, root_node_id: str):
-        from graphon.entities import GraphInitParams
+        from graphon.entities.graph_init_params import GraphInitParams
 
         # Create GraphInitParams for child graph execution.
         graph_init_params = GraphInitParams(

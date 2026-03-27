@@ -5,7 +5,10 @@ from pydantic import AfterValidator, BaseModel, Field, field_validator
 
 from graphon.entities.base_node_data import BaseNodeData
 from graphon.enums import BuiltinNodeTypes, NodeType
-from graphon.nodes.base import BaseLoopNodeData, BaseLoopState
+from graphon.nodes.base.entities import (
+    BaseLoopNodeData,
+    BaseLoopState,
+)
 from graphon.utils.condition.entities import Condition
 from graphon.variables.types import SegmentType
 

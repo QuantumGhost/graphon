@@ -6,12 +6,16 @@ from graphon.enums import (
     NodeExecutionType,
     WorkflowNodeExecutionStatus,
 )
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.answer.entities import AnswerNodeData
 from graphon.nodes.base.node import Node
 from graphon.nodes.base.template import Template
 from graphon.nodes.base.variable_template_parser import VariableTemplateParser
-from graphon.variables import ArrayFileSegment, FileSegment, Segment
+from graphon.variables.segments import (
+    ArrayFileSegment,
+    FileSegment,
+    Segment,
+)
 
 
 class AnswerNode(Node[AnswerNodeData]):

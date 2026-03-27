@@ -2,7 +2,7 @@ from pydantic import Field
 
 from graphon.entities.pause_reason import PauseReason
 from graphon.entities.workflow_start_reason import WorkflowStartReason
-from graphon.graph_events import BaseGraphEvent
+from graphon.graph_events.base import BaseGraphEvent
 
 
 class GraphRunStartedEvent(BaseGraphEvent):

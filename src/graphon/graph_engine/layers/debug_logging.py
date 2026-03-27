@@ -11,23 +11,29 @@ from typing import Any, final
 
 from typing_extensions import override
 
-from graphon.graph_events import (
-    GraphEngineEvent,
+from graphon.graph_events.base import GraphEngineEvent
+from graphon.graph_events.graph import (
     GraphRunAbortedEvent,
     GraphRunFailedEvent,
     GraphRunPartialSucceededEvent,
     GraphRunStartedEvent,
     GraphRunSucceededEvent,
-    NodeRunExceptionEvent,
-    NodeRunFailedEvent,
+)
+from graphon.graph_events.iteration import (
     NodeRunIterationFailedEvent,
     NodeRunIterationNextEvent,
     NodeRunIterationStartedEvent,
     NodeRunIterationSucceededEvent,
+)
+from graphon.graph_events.loop import (
     NodeRunLoopFailedEvent,
     NodeRunLoopNextEvent,
     NodeRunLoopStartedEvent,
     NodeRunLoopSucceededEvent,
+)
+from graphon.graph_events.node import (
+    NodeRunExceptionEvent,
+    NodeRunFailedEvent,
     NodeRunRetryEvent,
     NodeRunStartedEvent,
     NodeRunStreamChunkEvent,

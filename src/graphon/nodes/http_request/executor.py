@@ -11,7 +11,7 @@ import httpx
 from json_repair import repair_json
 
 from graphon.file.enums import FileTransferMethod
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 from graphon.variables.segments import ArrayFileSegment, FileSegment
 
 from ..protocols import FileManagerProtocol, HttpClientProtocol

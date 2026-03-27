@@ -8,20 +8,24 @@ from functools import singledispatchmethod
 from typing import TYPE_CHECKING, final
 
 from graphon.enums import ErrorStrategy, NodeExecutionType, NodeState
-from graphon.graph import Graph
-from graphon.graph_events import (
-    GraphNodeEventBase,
-    NodeRunAgentLogEvent,
-    NodeRunExceptionEvent,
-    NodeRunFailedEvent,
+from graphon.graph.graph import Graph
+from graphon.graph_events.agent import NodeRunAgentLogEvent
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.iteration import (
     NodeRunIterationFailedEvent,
     NodeRunIterationNextEvent,
     NodeRunIterationStartedEvent,
     NodeRunIterationSucceededEvent,
+)
+from graphon.graph_events.loop import (
     NodeRunLoopFailedEvent,
     NodeRunLoopNextEvent,
     NodeRunLoopStartedEvent,
     NodeRunLoopSucceededEvent,
+)
+from graphon.graph_events.node import (
+    NodeRunExceptionEvent,
+    NodeRunFailedEvent,
     NodeRunPauseRequestedEvent,
     NodeRunRetrieverResourceEvent,
     NodeRunRetryEvent,
@@ -31,7 +35,7 @@ from graphon.graph_events import (
     NodeRunVariableUpdatedEvent,
 )
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.runtime import GraphRuntimeState
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 from ..domain.graph_execution import GraphExecution
 from ..response_coordinator import ResponseStreamCoordinator

@@ -1,8 +1,12 @@
 import mimetypes
 import typing as tp
 
-from graphon.file import File, FileTransferMethod, FileType
 from graphon.file.constants import DEFAULT_EXTENSION, DEFAULT_MIME_TYPE
+from graphon.file.enums import (
+    FileTransferMethod,
+    FileType,
+)
+from graphon.file.models import File
 from graphon.nodes.protocols import (
     FileReferenceFactoryProtocol,
     HttpClientProtocol,

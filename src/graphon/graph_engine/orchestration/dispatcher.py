@@ -8,8 +8,8 @@ import threading
 import time
 from typing import TYPE_CHECKING, final
 
-from graphon.graph_events import (
-    GraphNodeEventBase,
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.node import (
     NodeRunExceptionEvent,
     NodeRunFailedEvent,
     NodeRunSucceededEvent,

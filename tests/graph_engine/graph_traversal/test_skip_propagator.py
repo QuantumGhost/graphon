@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, create_autospec
 
-from graphon.graph import Edge, Graph
+from graphon.graph.edge import Edge
+from graphon.graph.graph import Graph
 from graphon.graph_engine.graph_state_manager import GraphStateManager
 from graphon.graph_engine.graph_traversal.skip_propagator import SkipPropagator
 

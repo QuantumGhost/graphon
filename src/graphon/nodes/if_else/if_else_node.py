@@ -8,10 +8,10 @@ from graphon.enums import (
     NodeExecutionType,
     WorkflowNodeExecutionStatus,
 )
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
 from graphon.nodes.if_else.entities import IfElseNodeData
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 from graphon.utils.condition.entities import Condition
 from graphon.utils.condition.processor import ConditionProcessor
 

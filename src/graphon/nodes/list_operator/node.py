@@ -2,14 +2,16 @@ from collections.abc import Callable, Sequence
 from typing import Any, TypeAlias, TypeVar
 
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.file import File
-from graphon.node_events import NodeRunResult
+from graphon.file.models import File
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
-from graphon.variables import ArrayFileSegment, ArrayNumberSegment, ArrayStringSegment
 from graphon.variables.segments import (
     ArrayAnySegment,
     ArrayBooleanSegment,
+    ArrayFileSegment,
+    ArrayNumberSegment,
     ArraySegment,
+    ArrayStringSegment,
 )
 
 from .entities import FilterOperator, ListOperatorNodeData, Order

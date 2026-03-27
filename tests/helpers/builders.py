@@ -5,9 +5,9 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from graphon.entities import GraphInitParams
-from graphon.runtime import VariablePool
-from graphon.variables import VariableBase
+from graphon.entities.graph_init_params import GraphInitParams
+from graphon.runtime.variable_pool import VariablePool
+from graphon.variables.variables import VariableBase
 
 _FILE_REFERENCE_PREFIX = "dify-file-ref:"
 

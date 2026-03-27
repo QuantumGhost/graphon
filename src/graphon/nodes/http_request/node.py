@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING, Any
 
 from graphon.entities.graph_config import NodeConfigDict
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.file import File, FileTransferMethod
-from graphon.node_events import NodeRunResult
+from graphon.file.enums import FileTransferMethod
+from graphon.file.models import File
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base import variable_template_parser
 from graphon.nodes.base.entities import VariableSelector
 from graphon.nodes.base.node import Node
@@ -32,8 +33,8 @@ from .exc import HttpRequestNodeError, RequestBodyError
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
-    from graphon.runtime import GraphRuntimeState
+    from graphon.entities.graph_init_params import GraphInitParams
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 class HttpRequestNode(Node[HttpRequestNodeData]):

@@ -5,7 +5,8 @@ Skip state propagation through the graph.
 from collections.abc import Sequence
 from typing import final
 
-from graphon.graph import Edge, Graph
+from graphon.graph.edge import Edge
+from graphon.graph.graph import Graph
 
 from ..graph_state_manager import GraphStateManager
 

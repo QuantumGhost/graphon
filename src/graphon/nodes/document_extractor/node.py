@@ -23,12 +23,13 @@ from docx.text.paragraph import Paragraph
 
 from graphon.entities.graph_config import NodeConfigDict
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.file import File, FileTransferMethod, file_manager
-from graphon.node_events import NodeRunResult
+from graphon.file import file_manager
+from graphon.file.enums import FileTransferMethod
+from graphon.file.models import File
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
 from graphon.nodes.protocols import HttpClientProtocol
-from graphon.variables import ArrayFileSegment
-from graphon.variables.segments import ArrayStringSegment, FileSegment
+from graphon.variables.segments import ArrayFileSegment, ArrayStringSegment, FileSegment
 
 from .entities import DocumentExtractorNodeData, UnstructuredApiConfig
 from .exc import (
@@ -41,8 +42,8 @@ from .exc import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
-    from graphon.runtime import GraphRuntimeState
+    from graphon.entities.graph_init_params import GraphInitParams
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 class DocumentExtractorNode(Node[DocumentExtractorNodeData]):

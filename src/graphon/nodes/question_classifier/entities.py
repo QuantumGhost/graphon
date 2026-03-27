@@ -2,7 +2,10 @@ from pydantic import BaseModel, Field
 
 from graphon.entities.base_node_data import BaseNodeData
 from graphon.enums import BuiltinNodeTypes, NodeType
-from graphon.nodes.llm import ModelConfig, VisionConfig
+from graphon.nodes.llm.entities import (
+    ModelConfig,
+    VisionConfig,
+)
 from graphon.prompt_entities import MemoryConfig
 
 

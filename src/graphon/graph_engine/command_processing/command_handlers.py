@@ -4,7 +4,7 @@ from typing import final
 from typing_extensions import override
 
 from graphon.entities.pause_reason import SchedulingPause
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 
 from ..domain.graph_execution import GraphExecution
 from ..entities.commands import (

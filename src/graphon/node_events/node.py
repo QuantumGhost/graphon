@@ -5,9 +5,9 @@ from typing import Any
 from pydantic import Field
 
 from graphon.entities.pause_reason import PauseReason
-from graphon.file import File
+from graphon.file.models import File
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.variables.variables import Variable
 
 from .base import NodeEventBase

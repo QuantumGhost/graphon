@@ -1,5 +1,5 @@
 from graphon.model_runtime.entities.llm_entities import LLMUsage
-from graphon.runtime import GraphRuntimeState
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 
 class LLMUsageTrackingMixin:

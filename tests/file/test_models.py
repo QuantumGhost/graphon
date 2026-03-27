@@ -1,4 +1,9 @@
-from graphon.file import File, FileTransferMethod, FileType, helpers
+from graphon.file import helpers
+from graphon.file.enums import (
+    FileTransferMethod,
+    FileType,
+)
+from graphon.file.models import File
 
 from ..helpers import build_file_reference
 

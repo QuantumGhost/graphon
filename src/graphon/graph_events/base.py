@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 from graphon.enums import NodeType
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 
 
 class GraphEngineEvent(BaseModel):

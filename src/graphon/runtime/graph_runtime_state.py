@@ -16,7 +16,7 @@ from graphon.model_runtime.entities.llm_entities import LLMUsage
 from graphon.runtime.variable_pool import VariablePool
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
+    from graphon.entities.graph_init_params import GraphInitParams
     from graphon.entities.pause_reason import PauseReason
 
 

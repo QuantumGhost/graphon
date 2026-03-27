@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from graphon.entities.base_node_data import BaseNodeData
 from graphon.enums import BuiltinNodeTypes, NodeType
-from graphon.model_runtime.entities import ImagePromptMessageContent, LLMMode
+from graphon.model_runtime.entities.llm_entities import LLMMode
+from graphon.model_runtime.entities.message_entities import ImagePromptMessageContent
 from graphon.nodes.base.entities import VariableSelector
 from graphon.prompt_entities import (
     ChatModelMessage,

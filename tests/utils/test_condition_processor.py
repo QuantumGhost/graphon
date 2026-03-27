@@ -1,4 +1,4 @@
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 from graphon.utils.condition.entities import Condition
 from graphon.utils.condition.processor import ConditionProcessor
 

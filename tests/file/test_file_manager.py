@@ -3,10 +3,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from graphon.file import File, FileTransferMethod, FileType
+from graphon.file.enums import (
+    FileTransferMethod,
+    FileType,
+)
 from graphon.file.file_manager import download, to_prompt_message_content
+from graphon.file.models import File
 from graphon.file.runtime import get_workflow_file_runtime, set_workflow_file_runtime
-from graphon.model_runtime.entities import (
+from graphon.model_runtime.entities.message_entities import (
     DocumentPromptMessageContent,
     ImagePromptMessageContent,
     TextPromptMessageContent,

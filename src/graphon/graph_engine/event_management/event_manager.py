@@ -9,7 +9,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import final
 
-from graphon.graph_events import GraphEngineEvent
+from graphon.graph_events.base import GraphEngineEvent
 
 from ..layers.base import GraphEngineLayer
 

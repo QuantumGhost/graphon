@@ -9,21 +9,17 @@ import time
 from collections.abc import Generator, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from graphon.entities import GraphInitParams
 from graphon.entities.graph_config import NodeConfigDict
+from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import (
     BuiltinNodeTypes,
     NodeType,
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.file import File, FileType, file_manager
-from graphon.model_runtime.entities import (
-    ImagePromptMessageContent,
-    PromptMessage,
-    PromptMessageContentType,
-    TextPromptMessageContent,
-)
+from graphon.file import file_manager
+from graphon.file.enums import FileType
+from graphon.file.models import File
 from graphon.model_runtime.entities.llm_entities import (
     LLMResult,
     LLMResultChunk,
@@ -34,18 +30,24 @@ from graphon.model_runtime.entities.llm_entities import (
 )
 from graphon.model_runtime.entities.message_entities import (
     AssistantPromptMessage,
+    ImagePromptMessageContent,
+    PromptMessage,
+    PromptMessageContentType,
     PromptMessageContentUnionTypes,
     PromptMessageRole,
     SystemPromptMessage,
+    TextPromptMessageContent,
     UserPromptMessage,
 )
 from graphon.model_runtime.entities.model_entities import ModelFeature, ModelPropertyKey
-from graphon.model_runtime.memory import PromptMessageMemory
+from graphon.model_runtime.memory.prompt_message_memory import PromptMessageMemory
 from graphon.model_runtime.utils.encoders import jsonable_encoder
-from graphon.node_events import (
-    ModelInvokeCompletedEvent,
+from graphon.node_events.base import (
     NodeEventBase,
     NodeRunResult,
+)
+from graphon.node_events.node import (
+    ModelInvokeCompletedEvent,
     RunRetrieverResourceEvent,
     StreamChunkEvent,
     StreamCompletedEvent,
@@ -60,9 +62,9 @@ from graphon.nodes.llm.runtime_protocols import (
 )
 from graphon.nodes.protocols import HttpClientProtocol
 from graphon.prompt_entities import CompletionModelPromptTemplate, MemoryConfig
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 from graphon.template_rendering import Jinja2TemplateRenderer, TemplateRenderError
-from graphon.variables import (
+from graphon.variables.segments import (
     ArrayFileSegment,
     ArraySegment,
     FileSegment,
@@ -90,7 +92,7 @@ from .file_saver import LLMFileSaver
 
 if TYPE_CHECKING:
     from graphon.file.models import File
-    from graphon.runtime import GraphRuntimeState
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 logger = logging.getLogger(__name__)
 

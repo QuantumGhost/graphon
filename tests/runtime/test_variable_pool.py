@@ -1,4 +1,4 @@
-from graphon.runtime import VariablePool
+from graphon.runtime.variable_pool import VariablePool
 from graphon.variables.segments import (
     BooleanSegment,
     IntegerSegment,

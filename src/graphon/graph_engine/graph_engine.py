@@ -14,10 +14,12 @@ from typing import TYPE_CHECKING, cast, final
 
 from graphon.entities.workflow_start_reason import WorkflowStartReason
 from graphon.enums import NodeExecutionType
-from graphon.graph import Graph
-from graphon.graph_events import (
+from graphon.graph.graph import Graph
+from graphon.graph_events.base import (
     GraphEngineEvent,
     GraphNodeEventBase,
+)
+from graphon.graph_events.graph import (
     GraphRunAbortedEvent,
     GraphRunFailedEvent,
     GraphRunPartialSucceededEvent,
@@ -25,12 +27,12 @@ from graphon.graph_events import (
     GraphRunStartedEvent,
     GraphRunSucceededEvent,
 )
-from graphon.runtime import (
+from graphon.runtime.graph_runtime_state import (
+    ChildGraphEngineBuilderProtocol,
     GraphRuntimeState,
-    ReadOnlyGraphRuntimeStateWrapper,
-    VariablePool,
 )
-from graphon.runtime.graph_runtime_state import ChildGraphEngineBuilderProtocol
+from graphon.runtime.read_only_wrappers import ReadOnlyGraphRuntimeStateWrapper
+from graphon.runtime.variable_pool import VariablePool
 
 if TYPE_CHECKING:  # pragma: no cover - used only for static analysis
     from graphon.runtime.graph_runtime_state import GraphProtocol
@@ -53,9 +55,11 @@ from .orchestration import Dispatcher, ExecutionCoordinator
 from .worker_management import WorkerPool
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
+    from graphon.entities.graph_init_params import GraphInitParams
     from graphon.graph_engine.domain.graph_execution import GraphExecution
-    from graphon.graph_engine.response_coordinator import ResponseStreamCoordinator
+    from graphon.graph_engine.response_coordinator.coordinator import (
+        ResponseStreamCoordinator,
+    )
 
 logger = logging.getLogger(__name__)
 

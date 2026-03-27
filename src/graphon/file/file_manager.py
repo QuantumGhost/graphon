@@ -3,19 +3,17 @@ from __future__ import annotations
 import base64
 from collections.abc import Mapping
 
-from graphon.model_runtime.entities import (
+from graphon.model_runtime.entities.message_entities import (
     AudioPromptMessageContent,
     DocumentPromptMessageContent,
     ImagePromptMessageContent,
+    PromptMessageContentUnionTypes,
     TextPromptMessageContent,
     VideoPromptMessageContent,
 )
-from graphon.model_runtime.entities.message_entities import (
-    PromptMessageContentUnionTypes,
-)
 
-from .enums import FileAttribute
-from .models import File, FileTransferMethod, FileType
+from .enums import FileAttribute, FileTransferMethod, FileType
+from .models import File
 from .runtime import get_workflow_file_runtime
 
 

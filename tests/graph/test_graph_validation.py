@@ -6,13 +6,14 @@ from dataclasses import dataclass
 
 import pytest
 
-from graphon.entities import GraphInitParams
 from graphon.entities.base_node_data import BaseNodeData
+from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import BuiltinNodeTypes, ErrorStrategy, NodeExecutionType, NodeType
-from graphon.graph import Graph
+from graphon.graph.graph import Graph
 from graphon.graph.validation import GraphValidationError
 from graphon.nodes.base.node import Node
-from graphon.runtime import GraphRuntimeState, VariablePool
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.runtime.variable_pool import VariablePool
 
 from ..helpers import build_graph_init_params
 

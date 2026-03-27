@@ -11,8 +11,8 @@ import threading
 from contextlib import AbstractContextManager
 from typing import final
 
-from graphon.graph import Graph
-from graphon.graph_events import GraphNodeEventBase
+from graphon.graph.graph import Graph
+from graphon.graph_events.base import GraphNodeEventBase
 
 from ..config import GraphEngineConfig
 from ..layers.base import GraphEngineLayer

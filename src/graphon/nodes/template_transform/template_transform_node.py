@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any
 
 from graphon.entities.graph_config import NodeConfigDict
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.entities import VariableSelector
 from graphon.nodes.base.node import Node
 from graphon.nodes.template_transform.entities import TemplateTransformNodeData
@@ -13,8 +13,8 @@ from graphon.template_rendering import (
 )
 
 if TYPE_CHECKING:
-    from graphon.entities import GraphInitParams
-    from graphon.runtime import GraphRuntimeState
+    from graphon.entities.graph_init_params import GraphInitParams
+    from graphon.runtime.graph_runtime_state import GraphRuntimeState
 
 DEFAULT_TEMPLATE_TRANSFORM_MAX_OUTPUT_LENGTH = 400_000
 

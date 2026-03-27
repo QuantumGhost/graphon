@@ -7,7 +7,8 @@ from collections.abc import Sequence
 from typing import TypedDict, final
 
 from graphon.enums import NodeState
-from graphon.graph import Edge, Graph
+from graphon.graph.edge import Edge
+from graphon.graph.graph import Graph
 
 from .ready_queue import ReadyQueue
 

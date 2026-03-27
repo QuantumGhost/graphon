@@ -3,7 +3,7 @@ from typing import Any, Protocol
 
 import httpx
 
-from graphon.file import File
+from graphon.file.models import File
 
 
 class HttpClientProtocol(Protocol):

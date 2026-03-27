@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
 from graphon.nodes.variable_aggregator.entities import VariableAggregatorNodeData
 from graphon.variables.segments import Segment

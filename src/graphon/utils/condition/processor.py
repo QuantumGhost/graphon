@@ -2,10 +2,14 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Literal, NamedTuple
 
-from graphon.file import FileAttribute, file_manager
-from graphon.runtime import VariablePool
-from graphon.variables import ArrayFileSegment
-from graphon.variables.segments import ArrayBooleanSegment, BooleanSegment
+from graphon.file import file_manager
+from graphon.file.enums import FileAttribute
+from graphon.runtime.variable_pool import VariablePool
+from graphon.variables.segments import (
+    ArrayBooleanSegment,
+    ArrayFileSegment,
+    BooleanSegment,
+)
 
 from .entities import Condition, SubCondition, SupportedComparisonOperator
 

@@ -3,8 +3,8 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from graphon.variables import Segment
 from graphon.variables.consts import SELECTORS_LENGTH
+from graphon.variables.segments import Segment
 from graphon.variables.types import SegmentType
 
 # Use double underscore (`__`) prefix for internal variables

@@ -11,14 +11,13 @@ from graphon.enums import (
     NodeExecutionType,
     WorkflowNodeExecutionStatus,
 )
-from graphon.node_events import (
+from graphon.node_events.base import NodeEventBase, NodeRunResult
+from graphon.node_events.node import (
     HumanInputFormFilledEvent,
     HumanInputFormTimeoutEvent,
-    NodeRunResult,
     PauseRequestedEvent,
+    StreamCompletedEvent,
 )
-from graphon.node_events.base import NodeEventBase
-from graphon.node_events.node import StreamCompletedEvent
 from graphon.nodes.base.node import Node
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,

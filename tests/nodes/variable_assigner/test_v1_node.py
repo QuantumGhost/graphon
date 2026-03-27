@@ -4,8 +4,11 @@ from graphon.graph_events.node import NodeRunSucceededEvent, NodeRunVariableUpda
 from graphon.nodes.variable_assigner.common import helpers as common_helpers
 from graphon.nodes.variable_assigner.v1.node import VariableAssignerNode
 from graphon.nodes.variable_assigner.v1.node_data import WriteMode
-from graphon.runtime import GraphRuntimeState
-from graphon.variables import ArrayStringVariable, StringVariable
+from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.variables.variables import (
+    ArrayStringVariable,
+    StringVariable,
+)
 
 from ...helpers import build_graph_init_params, build_variable_pool
 

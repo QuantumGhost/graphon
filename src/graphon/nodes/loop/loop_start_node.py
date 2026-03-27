@@ -1,5 +1,5 @@
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 from graphon.nodes.base.node import Node
 from graphon.nodes.loop.entities import LoopStartNodeData
 

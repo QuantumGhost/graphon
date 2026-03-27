@@ -1,6 +1,6 @@
 from graphon.nodes.variable_assigner.v2.enums import Operation
 from graphon.nodes.variable_assigner.v2.helpers import is_input_value_valid
-from graphon.variables import SegmentType
+from graphon.variables.types import SegmentType
 
 
 def test_is_input_value_valid_overwrite_array_string():

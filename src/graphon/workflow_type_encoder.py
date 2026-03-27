@@ -5,7 +5,7 @@ from typing import Any, overload
 from pydantic import BaseModel
 
 from graphon.file.models import File
-from graphon.variables import Segment
+from graphon.variables.segments import Segment
 
 
 class WorkflowRuntimeTypeConverter:

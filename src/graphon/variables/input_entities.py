@@ -5,7 +5,10 @@ from typing import Any
 from jsonschema import Draft7Validator, SchemaError
 from pydantic import BaseModel, Field, field_validator
 
-from graphon.file import FileTransferMethod, FileType
+from graphon.file.enums import (
+    FileTransferMethod,
+    FileType,
+)
 
 
 class VariableEntityType(StrEnum):

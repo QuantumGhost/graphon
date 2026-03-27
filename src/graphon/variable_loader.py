@@ -2,9 +2,9 @@ import abc
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
-from graphon.runtime import VariablePool
-from graphon.variables import VariableBase
+from graphon.runtime.variable_pool import VariablePool
 from graphon.variables.consts import SELECTORS_LENGTH
+from graphon.variables.variables import VariableBase
 
 
 class VariableLoader(Protocol):

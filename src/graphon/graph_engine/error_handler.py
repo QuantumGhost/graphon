@@ -13,14 +13,14 @@ from graphon.enums import (
     WorkflowNodeExecutionMetadataKey,
     WorkflowNodeExecutionStatus,
 )
-from graphon.graph import Graph
-from graphon.graph_events import (
-    GraphNodeEventBase,
+from graphon.graph.graph import Graph
+from graphon.graph_events.base import GraphNodeEventBase
+from graphon.graph_events.node import (
     NodeRunExceptionEvent,
     NodeRunFailedEvent,
     NodeRunRetryEvent,
 )
-from graphon.node_events import NodeRunResult
+from graphon.node_events.base import NodeRunResult
 
 if TYPE_CHECKING:
     from .domain import GraphExecution
