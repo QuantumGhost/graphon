@@ -1,8 +1,10 @@
 [project]
 name = 'graphon'
+version = '0.1.0'
 description = 'Graph execution engine for agentic AI workflows.'
 readme = 'README.md'
-version = '0.1.0'
+license = 'Apache-2.0'
+license-files = ['LICENSE']
 requires-python = '>=3.11,<3.13'
 dependencies = [
     'charset-normalizer>=3.4.4',
