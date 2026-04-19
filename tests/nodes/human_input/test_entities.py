@@ -16,7 +16,7 @@ from graphon.nodes.human_input.enums import (
 
 _FORM_INPUTS_JSON_PAYLOAD = [
     {
-        "type": "text_input",
+        "type": "paragraph",
         "output_variable_name": "name",
         "default": {
             "type": "constant",
@@ -71,7 +71,7 @@ class TestHumanInputNodeDataDeserialization:
         assert restored.title == "Collect Input"
         assert restored.form_content == "Name: {{#$output.name#}}"
         assert len(restored.inputs) == 2
-        assert restored.inputs[0].type == FormInputType.TEXT_INPUT
+        assert restored.inputs[0].type == FormInputType.PARAGRAPH
         assert restored.inputs[0].output_variable_name == "name"
         assert restored.inputs[0].default is not None
         assert restored.inputs[0].default.type == ValueSourceType.CONSTANT
@@ -108,7 +108,7 @@ class TestFormDefinitionDeserialization:
         assert restored.form_content == "Name: {{#$output.name#}}"
         assert restored.rendered_content == "Name: Alice"
         assert len(restored.inputs) == 2
-        assert restored.inputs[0].type == FormInputType.TEXT_INPUT
+        assert restored.inputs[0].type == FormInputType.PARAGRAPH
         assert restored.inputs[0].default is not None
         assert restored.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored.inputs[0].default.value == "Alice"
@@ -123,39 +123,6 @@ class TestFormDefinitionDeserialization:
 
 
 class TestFormInputRoundTrip:
-    def test_text_input_roundtrip_in_wrapper_model(self) -> None:
-        original = _FormInputHolder(
-            form_input=ParagraphInput(
-                type=FormInputType.TEXT_INPUT,
-                output_variable_name="name",
-                default=StringSource(
-                    type=ValueSourceType.CONSTANT,
-                    value="Alice",
-                ),
-            )
-        )
-
-        payload = original.model_dump(mode="json")
-        restored = _FormInputHolder.model_validate(payload)
-
-        assert payload == {
-            "form_input": {
-                "type": "text_input",
-                "output_variable_name": "name",
-                "default": {
-                    "type": "constant",
-                    "selector": [],
-                    "value": "Alice",
-                },
-            }
-        }
-        assert restored.form_input.type == FormInputType.TEXT_INPUT
-        assert restored.form_input.output_variable_name == "name"
-        assert restored.form_input.default is not None
-        assert restored.form_input.default.type == ValueSourceType.CONSTANT
-        assert restored.form_input.default.selector == []
-        assert restored.form_input.default.value == "Alice"
-
     def test_paragraph_roundtrip_in_wrapper_model(self) -> None:
         original = _FormInputHolder(
             form_input=ParagraphInput(

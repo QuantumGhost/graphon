@@ -44,12 +44,12 @@ class TimeoutUnit(enum.StrEnum):
 class FormInputType(enum.StrEnum):
     """Form input types.
 
-    Name for this enumeration are intentionally keep the same as those for `VariableEntityType`.
+    Name for this enumeration are intentionally keep the same as those for
+    `VariableEntityType`.
     """
 
     # Both `TEXT_INPUT` and `PARAGRAPH` represent string input fields.
     # The corresponding generated variable type is `SegmentType.STRING`.
-    TEXT_INPUT = enum.auto()
     PARAGRAPH = enum.auto()
 
     # A single-select input field (e.g., a dropdown or radio buttons).

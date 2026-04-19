@@ -87,11 +87,11 @@ class TestPauseReasonDiscriminator:
 
     def test_human_input_required_model_validate_accepts_current_form_input_payload(
         self,
-    ):
+    ) -> None:
 
         form_inputs_json = [
             {
-                "type": "text_input",
+                "type": "paragraph",
                 "output_variable_name": "name",
                 "default": {
                     "type": "constant",
@@ -138,7 +138,7 @@ class TestPauseReasonDiscriminator:
         assert restored.reason.node_id == "node_id"
         assert restored.reason.node_title == "node_title"
         assert len(restored.reason.inputs) == 2
-        assert restored.reason.inputs[0].type == FormInputType.TEXT_INPUT
+        assert restored.reason.inputs[0].type == FormInputType.PARAGRAPH
         assert restored.reason.inputs[0].output_variable_name == "name"
         assert restored.reason.inputs[0].default is not None
         assert restored.reason.inputs[0].default.type == ValueSourceType.CONSTANT
