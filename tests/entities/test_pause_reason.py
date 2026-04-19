@@ -10,7 +10,7 @@ from graphon.entities.pause_reason import (
 )
 from graphon.nodes.human_input.enums import (
     FormInputType,
-    PlaceholderType,
+    ValueSourceType,
 )
 
 
@@ -141,11 +141,11 @@ class TestPauseReasonDiscriminator:
         assert restored.reason.inputs[0].type == FormInputType.TEXT_INPUT
         assert restored.reason.inputs[0].output_variable_name == "name"
         assert restored.reason.inputs[0].default is not None
-        assert restored.reason.inputs[0].default.type == PlaceholderType.CONSTANT
+        assert restored.reason.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored.reason.inputs[0].default.value == "Alice"
         assert restored.reason.inputs[1].type == FormInputType.PARAGRAPH
         assert restored.reason.inputs[1].default is not None
-        assert restored.reason.inputs[1].default.type == PlaceholderType.VARIABLE
+        assert restored.reason.inputs[1].default.type == ValueSourceType.VARIABLE
         assert restored.reason.inputs[1].default.selector == ["start", "bio"]
         assert restored.reason.inputs[1].default.value == ""
         assert [action.id for action in restored.reason.actions] == ["approve"]

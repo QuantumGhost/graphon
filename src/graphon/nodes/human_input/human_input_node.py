@@ -29,7 +29,7 @@ from graphon.runtime.graph_runtime_state import GraphRuntimeState
 from graphon.workflow_type_encoder import WorkflowRuntimeTypeConverter
 
 from .entities import HumanInputNodeData
-from .enums import HumanInputFormStatus, PlaceholderType
+from .enums import HumanInputFormStatus, ValueSourceType
 
 _SELECTED_BRANCH_KEY = "selected_branch"
 
@@ -165,7 +165,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
         for form_input in self._node_data.inputs:
             if (default_value := form_input.default) is None:
                 continue
-            if default_value.type == PlaceholderType.CONSTANT:
+            if default_value.type == ValueSourceType.CONSTANT:
                 continue
             resolved_value = variable_pool.get(default_value.selector)
             if resolved_value is None:

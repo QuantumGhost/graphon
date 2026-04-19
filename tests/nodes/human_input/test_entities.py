@@ -10,8 +10,8 @@ from graphon.nodes.human_input.entities import (
 )
 from graphon.nodes.human_input.enums import (
     FormInputType,
-    PlaceholderType,
     TimeoutUnit,
+    ValueSourceType,
 )
 
 _FORM_INPUTS_JSON_PAYLOAD = [
@@ -74,12 +74,12 @@ class TestHumanInputNodeDataDeserialization:
         assert restored.inputs[0].type == FormInputType.TEXT_INPUT
         assert restored.inputs[0].output_variable_name == "name"
         assert restored.inputs[0].default is not None
-        assert restored.inputs[0].default.type == PlaceholderType.CONSTANT
+        assert restored.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored.inputs[0].default.selector == []
         assert restored.inputs[0].default.value == "Alice"
         assert restored.inputs[1].type == FormInputType.PARAGRAPH
         assert restored.inputs[1].default is not None
-        assert restored.inputs[1].default.type == PlaceholderType.VARIABLE
+        assert restored.inputs[1].default.type == ValueSourceType.VARIABLE
         assert restored.inputs[1].default.selector == ["start", "bio"]
         assert [action.id for action in restored.user_actions] == ["approve", "reject"]
         assert [action.button_style.value for action in restored.user_actions] == [
@@ -110,7 +110,7 @@ class TestFormDefinitionDeserialization:
         assert len(restored.inputs) == 2
         assert restored.inputs[0].type == FormInputType.TEXT_INPUT
         assert restored.inputs[0].default is not None
-        assert restored.inputs[0].default.type == PlaceholderType.CONSTANT
+        assert restored.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored.inputs[0].default.value == "Alice"
         assert restored.inputs[1].type == FormInputType.PARAGRAPH
         assert restored.inputs[1].default is not None
@@ -129,7 +129,7 @@ class TestFormInputRoundTrip:
                 type=FormInputType.TEXT_INPUT,
                 output_variable_name="name",
                 default=StringSource(
-                    type=PlaceholderType.CONSTANT,
+                    type=ValueSourceType.CONSTANT,
                     value="Alice",
                 ),
             )
@@ -152,7 +152,7 @@ class TestFormInputRoundTrip:
         assert restored.form_input.type == FormInputType.TEXT_INPUT
         assert restored.form_input.output_variable_name == "name"
         assert restored.form_input.default is not None
-        assert restored.form_input.default.type == PlaceholderType.CONSTANT
+        assert restored.form_input.default.type == ValueSourceType.CONSTANT
         assert restored.form_input.default.selector == []
         assert restored.form_input.default.value == "Alice"
 
@@ -162,7 +162,7 @@ class TestFormInputRoundTrip:
                 type=FormInputType.PARAGRAPH,
                 output_variable_name="bio",
                 default=StringSource(
-                    type=PlaceholderType.VARIABLE,
+                    type=ValueSourceType.VARIABLE,
                     selector=("start", "bio"),
                 ),
             )
@@ -185,6 +185,6 @@ class TestFormInputRoundTrip:
         assert restored.form_input.type == FormInputType.PARAGRAPH
         assert restored.form_input.output_variable_name == "bio"
         assert restored.form_input.default is not None
-        assert restored.form_input.default.type == PlaceholderType.VARIABLE
+        assert restored.form_input.default.type == ValueSourceType.VARIABLE
         assert restored.form_input.default.selector == ["start", "bio"]
         assert restored.form_input.default.value == ""

@@ -17,7 +17,7 @@ from graphon.enums import BuiltinNodeTypes, NodeType
 from graphon.nodes.base.variable_template_parser import VariableTemplateParser
 from graphon.variables.consts import SELECTORS_LENGTH
 
-from .enums import ButtonStyle, FormInputType, PlaceholderType, TimeoutUnit
+from .enums import ButtonStyle, FormInputType, TimeoutUnit, ValueSourceType
 
 _OUTPUT_VARIABLE_PATTERN = re.compile(
     r"\{\{#\$output\.(?P<field_name>[a-zA-Z_][a-zA-Z0-9_]{0,29})#\}\}",
@@ -34,7 +34,7 @@ class StringSource(BaseModel):
 
     # NOTE: This class is renamed from FormInputDefault.
 
-    type: PlaceholderType
+    type: ValueSourceType
 
     # The selector of default variable, used when `type` is `VARIABLE`.
     selector: Sequence[str] = Field(default_factory=tuple)
@@ -45,7 +45,7 @@ class StringSource(BaseModel):
 
     @model_validator(mode="after")
     def _validate_selector(self) -> Self:
-        if self.type == PlaceholderType.CONSTANT:
+        if self.type == ValueSourceType.CONSTANT:
             return self
         if len(self.selector) < SELECTORS_LENGTH:
             msg = (
@@ -167,7 +167,7 @@ class HumanInputNodeData(BaseNodeData):
             default_value = form_input.default
             if default_value is None:
                 continue
-            if default_value.type == PlaceholderType.CONSTANT:
+            if default_value.type == ValueSourceType.CONSTANT:
                 continue
             default_value_key = ".".join(default_value.selector)
             qualified_variable_mapping_key = f"{node_id}.#{default_value_key}#"
