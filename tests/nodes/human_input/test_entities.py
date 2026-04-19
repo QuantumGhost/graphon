@@ -4,9 +4,9 @@ from pydantic import BaseModel
 
 from graphon.nodes.human_input.entities import (
     FormDefinition,
-    FormInput,
-    FormInputDefault,
     HumanInputNodeData,
+    ParagraphInput,
+    StringSource,
 )
 from graphon.nodes.human_input.enums import (
     FormInputType,
@@ -50,7 +50,7 @@ _USER_ACTIONS_JSON_PAYLOAD = [
 
 
 class _FormInputHolder(BaseModel):
-    form_input: FormInput
+    form_input: ParagraphInput
 
 
 class TestHumanInputNodeDataDeserialization:
@@ -125,10 +125,10 @@ class TestFormDefinitionDeserialization:
 class TestFormInputRoundTrip:
     def test_text_input_roundtrip_in_wrapper_model(self) -> None:
         original = _FormInputHolder(
-            form_input=FormInput(
+            form_input=ParagraphInput(
                 type=FormInputType.TEXT_INPUT,
                 output_variable_name="name",
-                default=FormInputDefault(
+                default=StringSource(
                     type=PlaceholderType.CONSTANT,
                     value="Alice",
                 ),
@@ -158,10 +158,10 @@ class TestFormInputRoundTrip:
 
     def test_paragraph_roundtrip_in_wrapper_model(self) -> None:
         original = _FormInputHolder(
-            form_input=FormInput(
+            form_input=ParagraphInput(
                 type=FormInputType.PARAGRAPH,
                 output_variable_name="bio",
-                default=FormInputDefault(
+                default=StringSource(
                     type=PlaceholderType.VARIABLE,
                     selector=("start", "bio"),
                 ),

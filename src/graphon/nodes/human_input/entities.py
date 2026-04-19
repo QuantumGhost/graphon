@@ -24,7 +24,7 @@ _OUTPUT_VARIABLE_PATTERN = re.compile(
 )
 
 
-class FormInputDefault(BaseModel):
+class StringSource(BaseModel):
     """Default configuration for form inputs."""
 
     # NOTE: Ideally, a discriminated union would be used to model
@@ -56,13 +56,13 @@ class FormInputDefault(BaseModel):
         return self
 
 
-class FormInput(BaseModel):
+class ParagraphInput(BaseModel):
     """Form input definition."""
 
     # NOTE: This class is renamed from FormInput.
     type: FormInputType
     output_variable_name: str
-    default: FormInputDefault | None = None
+    default: StringSource | None = None
 
 
 _IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -97,14 +97,14 @@ class HumanInputNodeData(BaseNodeData):
 
     type: NodeType = BuiltinNodeTypes.HUMAN_INPUT
     form_content: str = ""
-    inputs: list[FormInput] = Field(default_factory=list)
+    inputs: list[ParagraphInput] = Field(default_factory=list)
     user_actions: list[UserAction] = Field(default_factory=list)
     timeout: int = 36
     timeout_unit: TimeoutUnit = TimeoutUnit.HOUR
 
     @field_validator("inputs")
     @classmethod
-    def _validate_inputs(cls, inputs: list[FormInput]) -> list[FormInput]:
+    def _validate_inputs(cls, inputs: list[ParagraphInput]) -> list[ParagraphInput]:
         seen_names: set[str] = set()
         for form_input in inputs:
             name = form_input.output_variable_name
@@ -185,7 +185,7 @@ class HumanInputNodeData(BaseNodeData):
 
 class FormDefinition(BaseModel):
     form_content: str
-    inputs: list[FormInput] = Field(default_factory=list)
+    inputs: list[ParagraphInput] = Field(default_factory=list)
     user_actions: list[UserAction] = Field(default_factory=list)
     rendered_content: str
     expiration_time: datetime
@@ -206,7 +206,7 @@ class HumanInputSubmissionValidationError(ValueError):
 
 def validate_human_input_submission(
     *,
-    inputs: Sequence[FormInput],
+    inputs: Sequence[ParagraphInput],
     user_actions: Sequence[UserAction],
     selected_action_id: str,
     form_data: Mapping[str, Any],
