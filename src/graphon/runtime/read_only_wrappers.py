@@ -21,17 +21,7 @@ class ReadOnlyVariablePoolWrapper:
         value = self._variable_pool.get(selector)
         return deepcopy(value) if value is not None else None
 
-    def get_all_by_node(self, node_id: str) -> Mapping[str, object]:
-        """Return a copy of all variables for the specified node."""
-        variables: dict[str, object] = {}
-        if node_id in self._variable_pool.variable_dictionary:
-            for key, variable in self._variable_pool.variable_dictionary[
-                node_id
-            ].items():
-                variables[key] = deepcopy(variable.value)
-        return variables
-
-    def get_by_prefix(self, prefix: str) -> Mapping[str, object]:
+    def get_by_prefix(self, prefix: str, /) -> Mapping[str, object]:
         """Return a copy of all variables stored under the given prefix."""
         return self._variable_pool.get_by_prefix(prefix)
 
