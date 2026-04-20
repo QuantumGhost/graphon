@@ -155,3 +155,71 @@ class TestFormInputRoundTrip:
         assert restored.form_input.default.type == ValueSourceType.VARIABLE
         assert restored.form_input.default.selector == ["start", "bio"]
         assert restored.form_input.default.value == ""
+
+
+class TestHumanInputNodeDataVariableSelectorMapping:
+    def test_extract_variable_mapping_preserves_current_paragraph_input_behavior(
+        self,
+    ) -> None:
+        node_data = HumanInputNodeData(
+            title="Collect Input",
+            form_content=(
+                "Profile: {{#start.user.name#}} "
+                "Query: {{#sys.query#}} "
+                "Output: {{#$output.answer#}}"
+            ),
+            inputs=[
+                ParagraphInput(
+                    output_variable_name="notes",
+                ),
+                ParagraphInput(
+                    output_variable_name="summary",
+                    default=StringSource(
+                        type=ValueSourceType.CONSTANT,
+                        value="Pinned summary",
+                    ),
+                ),
+                ParagraphInput(
+                    output_variable_name="bio",
+                    default=StringSource(
+                        type=ValueSourceType.VARIABLE,
+                        selector=("input", "profile", "bio"),
+                    ),
+                ),
+            ],
+        )
+
+        mapping = node_data.extract_variable_selector_to_variable_mapping("human-node")
+
+        assert mapping == {
+            "human-node.#start.user#": ["start", "user"],
+            "human-node.#sys.query#": ["sys", "query"],
+            "human-node.#input.profile.bio#": ("input", "profile", "bio"),
+        }
+
+    def test_extract_variable_mapping_ignores_short_template_selectors(
+        self,
+        monkeypatch: Any,
+    ) -> None:
+        def _extract_short_selector(_self: Any) -> list[VariableSelector]:
+            return [
+                VariableSelector(
+                    variable="#start#",
+                    value_selector=["start"],
+                )
+            ]
+
+        monkeypatch.setattr(
+            "graphon.nodes.human_input.entities.VariableTemplateParser.extract_variable_selectors",
+            _extract_short_selector,
+        )
+
+        node_data = HumanInputNodeData(
+            title="Collect Input",
+            form_content="ignored",
+            inputs=[],
+        )
+
+        mapping = node_data.extract_variable_selector_to_variable_mapping("human-node")
+
+        assert mapping == {}
