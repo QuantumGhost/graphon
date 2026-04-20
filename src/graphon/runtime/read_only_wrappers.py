@@ -7,10 +7,11 @@ from graphon.model_runtime.entities.llm_entities import LLMUsage
 from graphon.variables.segments import Segment
 
 from .graph_runtime_state import GraphRuntimeState
+from .graph_runtime_state_protocol import ReadOnlyVariablePool
 from .variable_pool import VariablePool
 
 
-class ReadOnlyVariablePoolWrapper:
+class ReadOnlyVariablePoolWrapper(ReadOnlyVariablePool):
     """Provide defensive, read-only access to ``VariablePool``."""
 
     def __init__(self, variable_pool: VariablePool) -> None:
