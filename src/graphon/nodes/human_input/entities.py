@@ -76,6 +76,8 @@ class BaseInput(abc.ABC):
     One input corresponds to one output variable during form submission.
     """
 
+    output_variable_name: str
+
     @abc.abstractmethod
     def extract_variable_selectors(self) -> Sequence[Sequence[str]]:
         """`extract_variable_selectors` extracts variable selectors
@@ -96,7 +98,6 @@ class ParagraphInput(BaseModel, BaseInput):
 
     # NOTE: This class is renamed from FormInput.
     type: Literal[FormInputType.PARAGRAPH] = FormInputType.PARAGRAPH
-    output_variable_name: str
     default: StringSource | None = None
 
     def extract_variable_selectors(self) -> Sequence[Sequence[str]]:
@@ -120,7 +121,6 @@ class ParagraphInput(BaseModel, BaseInput):
 
 class SelectInput(BaseModel, BaseInput):
     type: Literal[FormInputType.SELECT] = FormInputType.SELECT
-    output_variable_name: str
     option_source: StringListSource
 
     def extract_variable_selectors(self) -> Sequence[Sequence[NodeType]]:
@@ -170,7 +170,6 @@ class _FileInputCommon(BaseModel):
 
 class FileInput(_FileInputCommon, BaseInput):
     type: Literal[FormInputType.FILE] = FormInputType.FILE
-    output_variable_name: str
 
     def extract_variable_selectors(self) -> Sequence[Sequence[NodeType]]:
         return []
@@ -182,7 +181,6 @@ class FileInput(_FileInputCommon, BaseInput):
 
 class FileListInput(_FileInputCommon, BaseInput):
     type: Literal[FormInputType.FILE_LIST] = FormInputType.FILE_LIST
-    output_variable_name: str
     number_limits: NonNegativeInt = 0
 
     def extract_variable_selectors(self) -> Sequence[Sequence[NodeType]]:
