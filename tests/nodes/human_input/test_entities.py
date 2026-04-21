@@ -7,7 +7,7 @@ from graphon.nodes.base.entities import VariableSelector
 from graphon.nodes.human_input.entities import (
     FormDefinition,
     HumanInputNodeData,
-    ParagraphInput,
+    ParagraphInputConfig,
     StringSource,
 )
 from graphon.nodes.human_input.enums import (
@@ -52,7 +52,7 @@ _USER_ACTIONS_JSON_PAYLOAD = [
 
 
 class _FormInputHolder(BaseModel):
-    form_input: ParagraphInput
+    form_input: ParagraphInputConfig
 
 
 class TestHumanInputNodeDataDeserialization:
@@ -73,7 +73,7 @@ class TestHumanInputNodeDataDeserialization:
         assert restored.title == "Collect Input"
         assert restored.form_content == "Name: {{#$output.name#}}"
         assert len(restored.inputs) == 2
-        assert isinstance(restored.inputs[0], ParagraphInput)
+        assert isinstance(restored.inputs[0], ParagraphInputConfig)
         assert restored.inputs[0].type == FormInputType.PARAGRAPH
         assert restored.inputs[0].output_variable_name == "name"
         assert restored.inputs[0].default is not None
@@ -81,7 +81,7 @@ class TestHumanInputNodeDataDeserialization:
         assert restored.inputs[0].default.selector == []
         assert restored.inputs[0].default.value == "Alice"
 
-        assert isinstance(restored.inputs[1], ParagraphInput)
+        assert isinstance(restored.inputs[1], ParagraphInputConfig)
 
         assert restored.inputs[1].type == FormInputType.PARAGRAPH
         assert restored.inputs[1].default is not None
@@ -115,13 +115,13 @@ class TestFormDefinitionDeserialization:
         assert restored.rendered_content == "Name: Alice"
         assert len(restored.inputs) == 2
 
-        assert isinstance(restored.inputs[0], ParagraphInput)
+        assert isinstance(restored.inputs[0], ParagraphInputConfig)
         assert restored.inputs[0].type == FormInputType.PARAGRAPH
         assert restored.inputs[0].default is not None
         assert restored.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored.inputs[0].default.value == "Alice"
 
-        assert isinstance(restored.inputs[1], ParagraphInput)
+        assert isinstance(restored.inputs[1], ParagraphInputConfig)
         assert restored.inputs[1].type == FormInputType.PARAGRAPH
         assert restored.inputs[1].default is not None
         assert restored.inputs[1].default.selector == ["start", "bio"]
@@ -135,7 +135,7 @@ class TestFormDefinitionDeserialization:
 class TestFormInputRoundTrip:
     def test_paragraph_roundtrip_in_wrapper_model(self) -> None:
         original = _FormInputHolder(
-            form_input=ParagraphInput(
+            form_input=ParagraphInputConfig(
                 type=FormInputType.PARAGRAPH,
                 output_variable_name="bio",
                 default=StringSource(
@@ -179,17 +179,17 @@ class TestHumanInputNodeDataVariableSelectorMapping:
                 "Output: {{#$output.answer#}}"
             ),
             inputs=[
-                ParagraphInput(
+                ParagraphInputConfig(
                     output_variable_name="notes",
                 ),
-                ParagraphInput(
+                ParagraphInputConfig(
                     output_variable_name="summary",
                     default=StringSource(
                         type=ValueSourceType.CONSTANT,
                         value="Pinned summary",
                     ),
                 ),
-                ParagraphInput(
+                ParagraphInputConfig(
                     output_variable_name="bio",
                     default=StringSource(
                         type=ValueSourceType.VARIABLE,

@@ -3,9 +3,9 @@ from time import perf_counter
 from typing import Any
 
 from graphon.nodes.human_input.entities import (
-    FormInput,
+    FormInputConfig,
     HumanInputNodeData,
-    ParagraphInput,
+    ParagraphInputConfig,
     StringSource,
 )
 from graphon.nodes.human_input.enums import ValueSourceType
@@ -43,7 +43,7 @@ class _RuntimeStub(HumanInputNodeRuntimeProtocol):
 
 def _build_node(
     *,
-    inputs: list[FormInput],
+    inputs: list[FormInputConfig],
     variables: tuple[tuple[tuple[str, ...], Any], ...] = (),
 ) -> HumanInputNode:
     runtime_state = GraphRuntimeState(
@@ -71,22 +71,22 @@ class TestHumanInputNodeResolveDefaultValues:
     ) -> None:
         node = _build_node(
             inputs=[
-                ParagraphInput(output_variable_name="without_default"),
-                ParagraphInput(
+                ParagraphInputConfig(output_variable_name="without_default"),
+                ParagraphInputConfig(
                     output_variable_name="constant_default",
                     default=StringSource(
                         type=ValueSourceType.CONSTANT,
                         value="Pinned text",
                     ),
                 ),
-                ParagraphInput(
+                ParagraphInputConfig(
                     output_variable_name="missing_default",
                     default=StringSource(
                         type=ValueSourceType.VARIABLE,
                         selector=("start", "missing"),
                     ),
                 ),
-                ParagraphInput(
+                ParagraphInputConfig(
                     output_variable_name="resolved_default",
                     default=StringSource(
                         type=ValueSourceType.VARIABLE,

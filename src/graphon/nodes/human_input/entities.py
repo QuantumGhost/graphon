@@ -71,8 +71,8 @@ class StringListSource(BaseModel):
     value: list[str] = Field(default_factory=list)
 
 
-class BaseInput(abc.ABC):
-    """BaseInput is the base class for all input field definitions.
+class BaseInputConfig(BaseModel):
+    """BaseInputConfig is the base class for all input field definitions.
     One input corresponds to one output variable during form submission.
     """
 
@@ -93,7 +93,7 @@ class BaseInput(abc.ABC):
         """
 
 
-class ParagraphInput(BaseModel, BaseInput):
+class ParagraphInputConfig(BaseInputConfig):
     """Form input definition."""
 
     # NOTE: This class is renamed from FormInput.
@@ -119,7 +119,7 @@ class ParagraphInput(BaseModel, BaseInput):
         return pool.get(default.selector)
 
 
-class SelectInput(BaseModel, BaseInput):
+class SelectInputConfig(BaseInputConfig):
     type: Literal[FormInputType.SELECT] = FormInputType.SELECT
     option_source: StringListSource
 
@@ -139,7 +139,7 @@ _ALLOWED_TRANSFER_METHOD = frozenset([
 ])
 
 
-class _FileInputCommon(BaseModel):
+class _FileInputCommonConfig(BaseModel):
     allowed_file_types: Sequence[FileType] = Field(default_factory=list[FileType])
     allowed_file_extensions: Sequence[str] = Field(default_factory=list)
     allowed_file_upload_methods: Sequence[FileTransferMethod] = Field(
@@ -168,7 +168,7 @@ class _FileInputCommon(BaseModel):
         return self
 
 
-class FileInput(_FileInputCommon, BaseInput):
+class FileInputConfig(_FileInputCommonConfig, BaseInputConfig):
     type: Literal[FormInputType.FILE] = FormInputType.FILE
 
     def extract_variable_selectors(self) -> Sequence[Sequence[NodeType]]:
@@ -179,7 +179,7 @@ class FileInput(_FileInputCommon, BaseInput):
         return None
 
 
-class FileListInput(_FileInputCommon, BaseInput):
+class FileListInputConfig(_FileInputCommonConfig, BaseInputConfig):
     type: Literal[FormInputType.FILE_LIST] = FormInputType.FILE_LIST
     number_limits: NonNegativeInt = 0
 
@@ -191,8 +191,8 @@ class FileListInput(_FileInputCommon, BaseInput):
         return None
 
 
-type FormInput = Annotated[
-    ParagraphInput | SelectInput | FileInput | FileListInput,
+type FormInputConfig = Annotated[
+    ParagraphInputConfig | SelectInputConfig | FileInputConfig | FileListInputConfig,
     Field(discriminator="type"),
 ]
 
@@ -200,7 +200,7 @@ type FormInput = Annotated[
 _IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
-class UserAction(BaseModel):
+class UserActionConfig(BaseModel):
     """User action configuration."""
 
     # id is the identifier for this action.
@@ -229,14 +229,14 @@ class HumanInputNodeData(BaseNodeData):
 
     type: NodeType = BuiltinNodeTypes.HUMAN_INPUT
     form_content: str = ""
-    inputs: list[FormInput] = Field(default_factory=list[FormInput])
-    user_actions: list[UserAction] = Field(default_factory=list[UserAction])
+    inputs: list[FormInputConfig] = Field(default_factory=list[FormInputConfig])
+    user_actions: list[UserActionConfig] = Field(default_factory=list[UserActionConfig])
     timeout: int = 36
     timeout_unit: TimeoutUnit = TimeoutUnit.HOUR
 
     @field_validator("inputs")
     @classmethod
-    def _validate_inputs(cls, inputs: list[FormInput]) -> list[FormInput]:
+    def _validate_inputs(cls, inputs: list[FormInputConfig]) -> list[FormInputConfig]:
         seen_names: set[str] = set()
         for form_input in inputs:
             name = form_input.output_variable_name
@@ -248,7 +248,9 @@ class HumanInputNodeData(BaseNodeData):
 
     @field_validator("user_actions")
     @classmethod
-    def _validate_user_actions(cls, user_actions: list[UserAction]) -> list[UserAction]:
+    def _validate_user_actions(
+        cls, user_actions: list[UserActionConfig]
+    ) -> list[UserActionConfig]:
         seen_ids: set[str] = set()
         for action in user_actions:
             action_id = action.id
@@ -314,8 +316,8 @@ class HumanInputNodeData(BaseNodeData):
 
 class FormDefinition(BaseModel):
     form_content: str
-    inputs: list[FormInput] = Field(default_factory=list[FormInput])
-    user_actions: list[UserAction] = Field(default_factory=list[UserAction])
+    inputs: list[FormInputConfig] = Field(default_factory=list[FormInputConfig])
+    user_actions: list[UserActionConfig] = Field(default_factory=list[UserActionConfig])
     rendered_content: str
     expiration_time: datetime
 
@@ -335,8 +337,8 @@ class HumanInputSubmissionValidationError(ValueError):
 
 def validate_human_input_submission(
     *,
-    inputs: Sequence[FormInput],
-    user_actions: Sequence[UserAction],
+    inputs: Sequence[FormInputConfig],
+    user_actions: Sequence[UserActionConfig],
     selected_action_id: str,
     form_data: Mapping[str, Any],
 ) -> None:

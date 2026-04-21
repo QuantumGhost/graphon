@@ -8,7 +8,7 @@ from graphon.entities.pause_reason import (
     PauseReason,
     SchedulingPause,
 )
-from graphon.nodes.human_input.entities import ParagraphInput
+from graphon.nodes.human_input.entities import ParagraphInputConfig
 from graphon.nodes.human_input.enums import (
     FormInputType,
     ValueSourceType,
@@ -140,14 +140,14 @@ class TestPauseReasonDiscriminator:
         assert restored_reason.node_title == "node_title"
         assert len(restored_reason.inputs) == 2
 
-        assert isinstance(restored_reason.inputs[0], ParagraphInput)
+        assert isinstance(restored_reason.inputs[0], ParagraphInputConfig)
         assert restored_reason.inputs[0].type == FormInputType.PARAGRAPH
         assert restored_reason.inputs[0].output_variable_name == "name"
         assert restored_reason.inputs[0].default is not None
         assert restored_reason.inputs[0].default.type == ValueSourceType.CONSTANT
         assert restored_reason.inputs[0].default.value == "Alice"
 
-        assert isinstance(restored_reason.inputs[1], ParagraphInput)
+        assert isinstance(restored_reason.inputs[1], ParagraphInputConfig)
         assert restored_reason.inputs[1].type == FormInputType.PARAGRAPH
         assert restored_reason.inputs[1].default is not None
         assert restored_reason.inputs[1].default.type == ValueSourceType.VARIABLE
