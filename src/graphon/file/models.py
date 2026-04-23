@@ -113,7 +113,7 @@ class File(BaseModel):
         *,
         file_id: str | None = None,
         tenant_id: str | None = None,
-        file_type: FileType,
+        file_type: FileType | None = None,
         transfer_method: FileTransferMethod,
         remote_url: str | None = None,
         reference: str | None = None,
@@ -129,7 +129,21 @@ class File(BaseModel):
         tool_file_id: str | None = None,
         upload_file_id: str | None = None,
         datasource_file_id: str | None = None,
+        **legacy_fields: Any,
     ) -> None:
+        legacy_id = legacy_fields.pop("id", None)
+        legacy_type = legacy_fields.pop("type", None)
+        if legacy_fields:
+            unexpected = ", ".join(sorted(legacy_fields))
+            msg = f"unexpected keyword arguments: {unexpected}"
+            raise TypeError(msg)
+        if file_id is None:
+            file_id = legacy_id
+        if file_type is None:
+            file_type = legacy_type
+        if file_type is None:
+            msg = "file_type is required"
+            raise TypeError(msg)
         legacy_record_id = (
             related_id or tool_file_id or upload_file_id or datasource_file_id
         )

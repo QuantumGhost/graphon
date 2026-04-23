@@ -867,6 +867,7 @@ class Node[NodeDataT: BaseNodeData](
             rendered_content=event.rendered_content,
             action_id=event.action_id,
             action_text=event.action_text,
+            form_data=event.form_data,
         )
 
     @_dispatch.register

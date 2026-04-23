@@ -4,12 +4,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from graphon.file import File, FileTransferMethod, FileType
 from graphon.graph_engine.domain.graph_execution import GraphExecution
 from graphon.graph_engine.ready_queue.in_memory import InMemoryReadyQueue
 from graphon.model_runtime.entities.llm_entities import LLMUsage
 from graphon.runtime.graph_runtime_state import GraphRuntimeState
 from graphon.runtime.read_only_wrappers import ReadOnlyGraphRuntimeStateWrapper
 from graphon.runtime.variable_pool import VariablePool
+from graphon.variables.segments import ArrayFileSegment, FileSegment
 from graphon.variables.variables import StringVariable
 
 CONVERSATION_VARIABLE_NODE_ID = "conversation"
@@ -328,3 +330,29 @@ class TestGraphRuntimeState:
         ))
         assert restored_value is not None
         assert restored_value.value == "after"
+
+    def test_snapshot_restore_preserves_file_segments(self) -> None:
+        variable_pool = VariablePool()
+        file_value = File(
+            file_id="file-1",
+            file_type=FileType.DOCUMENT,
+            transfer_method=FileTransferMethod.REMOTE_URL,
+            remote_url="https://example.com/resume.pdf",
+            filename="resume.pdf",
+            extension=".pdf",
+            mime_type="application/pdf",
+            size=128,
+        )
+        variable_pool.add(("node", "attachment"), FileSegment(value=file_value))
+        variable_pool.add(("node", "attachments"), ArrayFileSegment(value=[file_value]))
+
+        state = GraphRuntimeState(variable_pool=variable_pool, start_at=time())
+
+        restored = GraphRuntimeState.from_snapshot(state.dumps())
+
+        restored_file = restored.variable_pool.get(("node", "attachment"))
+        restored_files = restored.variable_pool.get(("node", "attachments"))
+        assert isinstance(restored_file, FileSegment)
+        assert restored_file.value.filename == "resume.pdf"
+        assert isinstance(restored_files, ArrayFileSegment)
+        assert restored_files.value[0].filename == "resume.pdf"

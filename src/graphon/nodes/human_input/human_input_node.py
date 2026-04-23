@@ -26,9 +26,16 @@ from graphon.nodes.runtime import (
     HumanInputNodeRuntimeProtocol,
 )
 from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.variables.factory import build_segment
+from graphon.variables.segments import ArrayFileSegment, FileSegment, Segment
 from graphon.workflow_type_encoder import WorkflowRuntimeTypeConverter
 
-from .entities import HumanInputNodeData
+from .entities import (
+    FileInputConfig,
+    FileListInputConfig,
+    FormInputConfig,
+    HumanInputNodeData,
+)
 from .enums import HumanInputFormStatus
 
 _SELECTED_BRANCH_KEY = "selected_branch"
@@ -255,8 +262,11 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 f"form_id={form.id}"
             )
             raise AssertionError(msg)
-        submitted_data = form.submitted_data or {}
-        outputs: dict[str, Any] = dict(submitted_data)
+        restored_form_data = self._runtime.restore_form_data(
+            node_data=self._node_data,
+            form_data=form.form_data or {},
+        )
+        outputs = self._build_outputs_from_form_data(restored_form_data)
         outputs[self._OUTPUT_FIELD_ACTION_ID] = selected_action_id
         rendered_content = self.render_form_content_with_outputs(
             form.rendered_content,
@@ -272,6 +282,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
             rendered_content=rendered_content,
             action_id=selected_action_id,
             action_text=action_text,
+            form_data=self._build_filled_event_form_data(outputs),
         )
 
         yield StreamCompletedEvent(
@@ -310,6 +321,12 @@ class HumanInputNode(Node[HumanInputNodeData]):
         for field_name in field_names:
             placeholder = "{{#$output." + field_name + "#}}"
             value = outputs.get(field_name)
+            if isinstance(value, Segment):
+                value = (
+                    WorkflowRuntimeTypeConverter().value_to_json_encodable_recursive(
+                        value,
+                    )
+                )
             if value is None:
                 replacement = ""
             elif isinstance(value, (dict, list)):
@@ -318,6 +335,86 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 replacement = str(value)
             rendered_content = rendered_content.replace(placeholder, replacement)
         return rendered_content
+
+    def _build_outputs_from_form_data(
+        self,
+        form_data: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        outputs: dict[str, Any] = dict(form_data)
+        inputs_by_name = {
+            form_input.output_variable_name: form_input
+            for form_input in self._node_data.inputs
+        }
+
+        for name, value in form_data.items():
+            form_input = inputs_by_name.get(name)
+            if form_input is None:
+                outputs[name] = value
+                continue
+            outputs[name] = self._build_output_value(form_input, value)
+
+        return outputs
+
+    def _build_output_value(
+        self,
+        form_input: FormInputConfig,
+        value: Any,
+    ) -> Any:
+        if isinstance(form_input, FileInputConfig):
+            return self._build_file_output_value(
+                output_variable_name=form_input.output_variable_name,
+                value=value,
+            )
+        if isinstance(form_input, FileListInputConfig):
+            return self._build_file_list_output_value(
+                output_variable_name=form_input.output_variable_name,
+                value=value,
+            )
+        return value
+
+    @staticmethod
+    def _build_file_output_value(
+        *,
+        output_variable_name: str,
+        value: Any,
+    ) -> FileSegment:
+        segment = build_segment(value)
+        if isinstance(segment, FileSegment):
+            return segment
+        msg = (
+            "HumanInput file output must restore to FileSegment, "
+            f"output_variable_name={output_variable_name}"
+        )
+        raise ValueError(msg)
+
+    @staticmethod
+    def _build_file_list_output_value(
+        *,
+        output_variable_name: str,
+        value: Any,
+    ) -> ArrayFileSegment:
+        segment = build_segment(value)
+        if isinstance(segment, ArrayFileSegment):
+            return segment
+        msg = (
+            "HumanInput file list output must restore to ArrayFileSegment, "
+            f"output_variable_name={output_variable_name}"
+        )
+        raise ValueError(msg)
+
+    @staticmethod
+    def _build_filled_event_form_data(
+        outputs: Mapping[str, Any],
+    ) -> Mapping[str, Segment]:
+        return {
+            name: value if isinstance(value, Segment) else build_segment(value)
+            for name, value in outputs.items()
+            if name
+            not in {
+                HumanInputNode._OUTPUT_FIELD_ACTION_ID,
+                HumanInputNode._OUTPUT_FIELD_RENDERED_CONTENT,
+            }
+        }
 
     @classmethod
     @override

@@ -74,10 +74,10 @@ class HumanInputFormFilledEvent(NodeEventBase):
     action_id: str
     action_text: str
 
-    # submitted_data records the data user submitted in the form inputs.
+    # form_data records the data user submitted in the form inputs.
     # It is a mapping from FormInput.output_variable_name to
     # their runtime values.
-    submitted_data: Mapping[str, Segment] = Field(default_factory=dict)
+    form_data: Mapping[str, Segment] = Field(default_factory=dict)
 
 
 class HumanInputFormTimeoutEvent(NodeEventBase):
