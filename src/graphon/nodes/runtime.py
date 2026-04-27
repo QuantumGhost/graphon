@@ -76,11 +76,11 @@ class HumanInputNodeRuntimeProtocol(Protocol):
         resolved_default_values: Mapping[str, Any],
     ) -> HumanInputFormStateProtocol: ...
 
-    def restore_form_data(
+    def restore_submitted_data(
         self,
         *,
         node_data: HumanInputNodeData,
-        form_data: Mapping[str, Any],
+        submitted_data: Mapping[str, Any],
     ) -> Mapping[str, Any]: ...
 
 

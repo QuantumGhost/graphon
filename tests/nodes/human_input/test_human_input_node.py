@@ -47,14 +47,14 @@ class _RuntimeStub(HumanInputNodeRuntimeProtocol):
         msg = "create_form should not be called in resolve_default_values tests"
         raise AssertionError(msg)
 
-    def restore_form_data(
+    def restore_submitted_data(
         self,
         *,
         node_data: HumanInputNodeData,
-        form_data: Mapping[str, Any],
+        submitted_data: Mapping[str, Any],
     ) -> Mapping[str, Any]:
         _ = node_data
-        return form_data
+        return submitted_data
 
 
 def _build_node(
@@ -145,7 +145,7 @@ class _SubmittedFormStub(HumanInputFormStateProtocol):
         return "approve"
 
     @property
-    def form_data(self) -> Mapping[str, Any] | None:
+    def submitted_data(self) -> Mapping[str, Any] | None:
         return {
             "attachment": File(
                 file_id="file-1",

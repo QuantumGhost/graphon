@@ -262,9 +262,9 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 f"form_id={form.id}"
             )
             raise AssertionError(msg)
-        restored_form_data = self._runtime.restore_form_data(
+        restored_form_data = self._runtime.restore_submitted_data(
             node_data=self._node_data,
-            form_data=form.form_data or {},
+            submitted_data=form.submitted_data or {},
         )
         outputs = self._build_outputs_from_form_data(restored_form_data)
         outputs[self._OUTPUT_FIELD_ACTION_ID] = selected_action_id
