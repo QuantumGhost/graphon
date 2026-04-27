@@ -262,11 +262,11 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 f"form_id={form.id}"
             )
             raise AssertionError(msg)
-        restored_form_data = self._runtime.restore_submitted_data(
+        restored_submission_data = self._runtime.restore_submitted_data(
             node_data=self._node_data,
             submitted_data=form.submitted_data or {},
         )
-        outputs = self._build_outputs_from_form_data(restored_form_data)
+        outputs = self._build_outputs_from_submitted_data(restored_submission_data)
         outputs[self._OUTPUT_FIELD_ACTION_ID] = selected_action_id
         rendered_content = self.render_form_content_with_outputs(
             form.rendered_content,
@@ -282,7 +282,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
             rendered_content=rendered_content,
             action_id=selected_action_id,
             action_text=action_text,
-            form_data=self._build_filled_event_form_data(outputs),
+            submitted_data=self._build_filled_event_form_data(outputs),
         )
 
         yield StreamCompletedEvent(
@@ -336,20 +336,20 @@ class HumanInputNode(Node[HumanInputNodeData]):
             rendered_content = rendered_content.replace(placeholder, replacement)
         return rendered_content
 
-    def _build_outputs_from_form_data(
+    def _build_outputs_from_submitted_data(
         self,
-        form_data: Mapping[str, Any],
+        submitted_data: Mapping[str, Any],
     ) -> dict[str, Any]:
-        outputs: dict[str, Any] = dict(form_data)
+        outputs: dict[str, Any] = dict(submitted_data)
         inputs_by_name = {
             form_input.output_variable_name: form_input
             for form_input in self._node_data.inputs
         }
 
-        for name, value in form_data.items():
+        for name, value in submitted_data.items():
             form_input = inputs_by_name.get(name)
             if form_input is None:
-                outputs[name] = value
+                logger.error("unexpected form data in submitted data, key=%s", name)
                 continue
             outputs[name] = self._build_output_value(form_input, value)
 

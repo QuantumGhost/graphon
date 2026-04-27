@@ -4,7 +4,10 @@ from time import perf_counter
 from typing import Any
 
 from graphon.file import File, FileTransferMethod, FileType
-from graphon.graph_events.node import NodeRunSucceededEvent
+from graphon.graph_events.node import (
+    NodeRunHumanInputFormFilledEvent,
+    NodeRunSucceededEvent,
+)
 from graphon.nodes.human_input.entities import (
     FileInputConfig,
     FileListInputConfig,
@@ -221,8 +224,13 @@ def test_human_input_resume_emits_runtime_file_segments() -> None:
     )
 
     events = list(node.run())
+    filled_event = next(
+        event for event in events if isinstance(event, NodeRunHumanInputFormFilledEvent)
+    )
     result = events[-1]
 
+    assert isinstance(filled_event.submitted_data["attachment"], FileSegment)
+    assert isinstance(filled_event.submitted_data["attachments"], ArrayFileSegment)
     assert isinstance(result, NodeRunSucceededEvent)
     assert isinstance(result.node_run_result.outputs["attachment"], FileSegment)
     assert isinstance(result.node_run_result.outputs["attachments"], ArrayFileSegment)
