@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from collections.abc import Generator, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
@@ -98,7 +99,7 @@ class HumanInputFormStateProtocol(Protocol):
     def selected_action_id(self) -> str | None: ...
 
     @property
-    def form_data(self) -> Mapping[str, Any] | None: ...
+    def submitted_data(self) -> Mapping[str, Any] | None: ...
 
     @property
     def submitted(self) -> bool: ...
