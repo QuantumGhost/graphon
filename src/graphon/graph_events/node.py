@@ -92,7 +92,7 @@ class NodeRunHumanInputFormFilledEvent(GraphNodeEventBase):
         ...,
         description="Display text of the chosen action button.",
     )
-    form_data: Mapping[str, Segment] = Field(
+    submitted_data: Mapping[str, Segment] = Field(
         default_factory=dict,
         description="Runtime submitted values keyed by form output variable name.",
     )
