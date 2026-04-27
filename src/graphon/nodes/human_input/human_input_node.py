@@ -35,6 +35,8 @@ from .entities import (
     FileListInputConfig,
     FormInputConfig,
     HumanInputNodeData,
+    ParagraphInputConfig,
+    SelectInputConfig,
 )
 from .enums import HumanInputFormStatus
 
@@ -245,7 +247,10 @@ class HumanInputNode(Node[HumanInputNodeData]):
             yield StreamCompletedEvent(
                 node_run_result=NodeRunResult(
                     status=WorkflowNodeExecutionStatus.SUCCEEDED,
-                    outputs={self._OUTPUT_FIELD_ACTION_ID: ""},
+                    outputs=self._build_special_outputs(
+                        action_id="",
+                        rendered_content=form.rendered_content,
+                    ),
                     edge_source_handle=self._TIMEOUT_HANDLE,
                 ),
             )
@@ -266,14 +271,19 @@ class HumanInputNode(Node[HumanInputNodeData]):
             node_data=self._node_data,
             submitted_data=form.submitted_data or {},
         )
-        outputs = self._build_outputs_from_submitted_data(restored_submission_data)
-        outputs[self._OUTPUT_FIELD_ACTION_ID] = selected_action_id
+        submitted_data = self._build_outputs_from_submitted_data(
+            restored_submission_data
+        )
         rendered_content = self.render_form_content_with_outputs(
             form.rendered_content,
-            outputs,
+            submitted_data,
             self._node_data.outputs_field_names(),
+            self._node_data.inputs,
         )
-        outputs[self._OUTPUT_FIELD_RENDERED_CONTENT] = rendered_content
+        outputs = dict(submitted_data) | self._build_special_outputs(
+            action_id=selected_action_id,
+            rendered_content=rendered_content,
+        )
 
         action_text = self._node_data.find_action_text(selected_action_id)
 
@@ -282,7 +292,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
             rendered_content=rendered_content,
             action_id=selected_action_id,
             action_text=action_text,
-            submitted_data=self._build_filled_event_form_data(outputs),
+            submitted_data=submitted_data,
         )
 
         yield StreamCompletedEvent(
@@ -315,32 +325,66 @@ class HumanInputNode(Node[HumanInputNodeData]):
         form_content: str,
         outputs: Mapping[str, Any],
         field_names: Sequence[str],
+        form_inputs: Sequence[FormInputConfig] | None = None,
     ) -> str:
-        """Replace {{#$output.xxx#}} placeholders with submitted values."""
+        """Replace {{#$output.xxx#}} placeholders with submitted values.
+
+        Text inputs render their submitted value directly. File inputs render as
+        stable placeholders so the final content stays readable and does not
+        inline transport metadata.
+        """
+        inputs_by_name = {}
+        if form_inputs is not None:
+            inputs_by_name = {
+                form_input.output_variable_name: form_input for form_input in form_inputs
+            }
+
         rendered_content = form_content
         for field_name in field_names:
             placeholder = "{{#$output." + field_name + "#}}"
-            value = outputs.get(field_name)
-            if isinstance(value, Segment):
-                value = (
-                    WorkflowRuntimeTypeConverter().value_to_json_encodable_recursive(
-                        value,
-                    )
-                )
-            if value is None:
-                replacement = ""
-            elif isinstance(value, (dict, list)):
-                replacement = json.dumps(value, ensure_ascii=False)
-            else:
-                replacement = str(value)
+            replacement = HumanInputNode._render_output_placeholder_value(
+                value=outputs.get(field_name),
+                form_input=inputs_by_name.get(field_name),
+            )
             rendered_content = rendered_content.replace(placeholder, replacement)
         return rendered_content
+
+    @staticmethod
+    def _render_output_placeholder_value(
+        *,
+        value: Any,
+        form_input: FormInputConfig | None,
+    ) -> str:
+        if isinstance(value, Segment):
+            value = WorkflowRuntimeTypeConverter().value_to_json_encodable_recursive(
+                value,
+            )
+
+        if value is None:
+            return ""
+
+        if isinstance(form_input, FileInputConfig):
+            return "[file]"
+
+        if isinstance(form_input, FileListInputConfig):
+            file_count = 0
+            if isinstance(value, Sequence) and not isinstance(value, str | bytes):
+                file_count = len(value)
+            return f"[{file_count} files]"
+
+        if isinstance(form_input, ParagraphInputConfig | SelectInputConfig):
+            return str(value)
+
+        if isinstance(value, (dict, list)):
+            return json.dumps(value, ensure_ascii=False)
+
+        return str(value)
 
     def _build_outputs_from_submitted_data(
         self,
         submitted_data: Mapping[str, Any],
-    ) -> dict[str, Any]:
-        outputs: dict[str, Any] = dict(submitted_data)
+    ) -> dict[str, Segment]:
+        outputs: dict[str, Segment] = {}
         inputs_by_name = {
             form_input.output_variable_name: form_input
             for form_input in self._node_data.inputs
@@ -355,11 +399,23 @@ class HumanInputNode(Node[HumanInputNodeData]):
 
         return outputs
 
+    @classmethod
+    def _build_special_outputs(
+        cls,
+        *,
+        action_id: str,
+        rendered_content: str,
+    ) -> dict[str, Segment]:
+        return {
+            cls._OUTPUT_FIELD_ACTION_ID: build_segment(action_id),
+            cls._OUTPUT_FIELD_RENDERED_CONTENT: build_segment(rendered_content),
+        }
+
     def _build_output_value(
         self,
         form_input: FormInputConfig,
         value: Any,
-    ) -> Any:
+    ) -> Segment:
         if isinstance(form_input, FileInputConfig):
             return self._build_file_output_value(
                 output_variable_name=form_input.output_variable_name,
@@ -370,7 +426,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 output_variable_name=form_input.output_variable_name,
                 value=value,
             )
-        return value
+        return value if isinstance(value, Segment) else build_segment(value)
 
     @staticmethod
     def _build_file_output_value(
@@ -401,20 +457,6 @@ class HumanInputNode(Node[HumanInputNodeData]):
             f"output_variable_name={output_variable_name}"
         )
         raise ValueError(msg)
-
-    @staticmethod
-    def _build_filled_event_form_data(
-        outputs: Mapping[str, Any],
-    ) -> Mapping[str, Segment]:
-        return {
-            name: value if isinstance(value, Segment) else build_segment(value)
-            for name, value in outputs.items()
-            if name
-            not in {
-                HumanInputNode._OUTPUT_FIELD_ACTION_ID,
-                HumanInputNode._OUTPUT_FIELD_RENDERED_CONTENT,
-            }
-        }
 
     @classmethod
     @override
