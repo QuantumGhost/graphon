@@ -50,19 +50,19 @@ class FormInputType(enum.StrEnum):
 
     # Both `TEXT_INPUT` and `PARAGRAPH` represent string input fields.
     # The corresponding generated variable type is `SegmentType.STRING`.
-    PARAGRAPH = enum.auto()
+    PARAGRAPH = "paragraph"
 
     # A single-select input field (e.g., a dropdown or radio buttons).
     # The corresponding generated variable type is `SegmentType.STRING`.
-    SELECT = enum.auto()
+    SELECT = "select"
 
     # A file input field that accepts a single file.
     #  The corresponding generated variable type is `SegmentType.FILE`.
-    FILE = enum.auto()
+    FILE = "file"
 
     # A file input field that accepts zero or more files.
     # The corresponding generated variable type is `SegmentType.ARRAY_FILE`.
-    FILE_LIST = enum.auto()
+    FILE_LIST = "file-list"
 
 
 class ValueSourceType(enum.StrEnum):
