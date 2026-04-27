@@ -61,12 +61,14 @@ class ToolNodeRuntimeProtocol(Protocol):
 class HumanInputNodeRuntimeProtocol(Protocol):
     """Workflow-layer adapter for human-input runtime persistence and delivery."""
 
+    @abc.abstractmethod
     def get_form(
         self,
         *,
         node_id: str,
     ) -> HumanInputFormStateProtocol | None: ...
 
+    @abc.abstractmethod
     def create_form(
         self,
         *,
@@ -76,6 +78,7 @@ class HumanInputNodeRuntimeProtocol(Protocol):
         resolved_default_values: Mapping[str, Any],
     ) -> HumanInputFormStateProtocol: ...
 
+    @abc.abstractmethod
     def restore_submitted_data(
         self,
         *,
