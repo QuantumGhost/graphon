@@ -16,7 +16,7 @@ from .enums import FileTransferMethod, FileType
 _FILE_REFERENCE_PREFIX = "dify-file-ref:"
 
 
-class _FileConstructorConflictError(ValueError):
+class _FileConstructorConflictError(Exception):
     """Raised when multiple constructor inputs disagree on file identity."""
 
 
