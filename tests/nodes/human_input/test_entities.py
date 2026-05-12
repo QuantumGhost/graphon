@@ -9,8 +9,10 @@ from graphon.nodes.human_input.entities import (
     HumanInputNodeData,
     ParagraphInputConfig,
     StringSource,
+    UserActionConfig,
 )
 from graphon.nodes.human_input.enums import (
+    ButtonStyle,
     FormInputType,
     TimeoutUnit,
     ValueSourceType,
@@ -233,3 +235,13 @@ class TestHumanInputNodeDataVariableSelectorMapping:
         mapping = node_data.extract_variable_selector_to_variable_mapping("human-node")
 
         assert mapping == {}
+
+
+def test_user_action_title_accepts_long_business_value() -> None:
+    action = UserActionConfig(
+        id="approve",
+        title="card_visa_enterprise_001_long_value",
+        button_style=ButtonStyle.DEFAULT,
+    )
+
+    assert action.title == "card_visa_enterprise_001_long_value"
