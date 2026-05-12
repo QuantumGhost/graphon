@@ -69,7 +69,7 @@ def test_run_emits_model_identity_in_node_result_inputs(
         ]),
     )
 
-    events = list(node._run())  # noqa: SLF001
+    events = list(node._run())
     completed_event = next(
         event for event in events if isinstance(event, StreamCompletedEvent)
     )
