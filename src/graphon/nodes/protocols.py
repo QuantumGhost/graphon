@@ -1,6 +1,8 @@
 from collections.abc import Generator, Mapping
 from typing import Any, Protocol
 
+from pydantic import JsonValue
+
 from graphon.file.models import File
 from graphon.http.protocols import HttpClientProtocol
 
@@ -25,6 +27,10 @@ class ToolFileManagerProtocol(Protocol):
 
 
 class FileReferenceFactoryProtocol(Protocol):
+    """FileReferenceFactoryProtocol recreates File object from serialized JSON
+    format. It enforces approriate permission filtering for the file.
+    """
+
     def build_from_mapping(self, *, mapping: Mapping[str, Any]) -> File: ...
 
 
