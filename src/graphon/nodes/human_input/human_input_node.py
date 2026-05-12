@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Generator, Mapping, Sequence
 from datetime import UTC, datetime
-from typing import Any, override
+from typing import Any, assert_never, override
 
 from graphon.entities.graph_init_params import GraphInitParams
 from graphon.entities.pause_reason import HumanInputRequired
@@ -30,7 +30,7 @@ from graphon.nodes.runtime import (
 )
 from graphon.runtime.graph_runtime_state import GraphRuntimeState
 from graphon.variables.factory import build_segment
-from graphon.variables.segments import ArrayFileSegment, FileSegment, Segment
+from graphon.variables.segments import Segment
 from graphon.workflow_type_encoder import WorkflowRuntimeTypeConverter
 
 from .entities import (
@@ -272,9 +272,16 @@ class HumanInputNode(Node[HumanInputNodeData]):
         restored_submission_data = self._restore_submitted_data(
             submitted_data=form.submitted_data or {},
         )
-        submitted_data = self._build_outputs_from_submitted_data(
-            restored_submission_data
-        )
+        inputs_by_name = {
+            form_input.output_variable_name: form_input
+            for form_input in self._node_data.inputs
+        }
+        submitted_data: dict[str, Segment] = {}
+        for name, value in restored_submission_data.items():
+            if name not in inputs_by_name:
+                logger.error("unexpected form data in submitted data, key=%s", name)
+                continue
+            submitted_data[name] = value
         selected_action_value = next(
             ua.title
             for ua in self._node_data.user_actions
@@ -392,11 +399,26 @@ class HumanInputNode(Node[HumanInputNodeData]):
 
         return str(value)
 
-    def _build_outputs_from_submitted_data(
+    def _restore_submitted_data(
         self,
+        *,
         submitted_data: Mapping[str, Any],
     ) -> dict[str, Segment]:
-        outputs: dict[str, Segment] = {}
+        """_restore_submitted_data restruct python data types from
+        **validated form data**.
+
+        Returns:
+            A mapping from input field names to their corresponding
+            graphon runtime values.
+
+        Raises:
+            _InvalidSubmittedDataError: if submission data are invalid.
+            This exception type is intentionally private.
+        """
+        # NOTE: ideally this logic shoule be integrated into
+        # `HumanInputFormStateProtocol.submitted_data`.
+
+        restored_data: dict[str, Segment] = {}
         inputs_by_name = {
             form_input.output_variable_name: form_input
             for form_input in self._node_data.inputs
@@ -405,57 +427,54 @@ class HumanInputNode(Node[HumanInputNodeData]):
         for name, value in submitted_data.items():
             form_input = inputs_by_name.get(name)
             if form_input is None:
-                logger.error("unexpected form data in submitted data, key=%s", name)
+                restored_data[name] = build_segment(value)
                 continue
-            outputs[name] = self._build_output_value(form_input, value)
 
-        return outputs
-
-    def _restore_submitted_data(
-        self,
-        *,
-        submitted_data: Mapping[str, Any],
-    ) -> dict[str, Any]:
-        restored_data = dict(submitted_data)
-        inputs_by_name = {
-            form_input.output_variable_name: form_input
-            for form_input in self._node_data.inputs
-        }
-
-        for name, value in submitted_data.items():
-            form_input = inputs_by_name.get(name)
-            if isinstance(form_input, FileInputConfig):
-                if not isinstance(value, Mapping):
-                    msg = (
-                        "HumanInput file input expects a mapping payload, "
-                        f"output_variable_name={name}, got={type(value).__name__}"
+            match form_input:
+                case FileInputConfig():
+                    if not isinstance(value, Mapping):
+                        msg = (
+                            "HumanInput file input expects a mapping payload, "
+                            f"output_variable_name={name}, got={type(value).__name__}"
+                        )
+                        raise _InvalidSubmittedDataError(msg)
+                    restored_data[name] = build_segment(
+                        self._restore_file_value(
+                            output_variable_name=name,
+                            value=value,
+                        )
                     )
-                    raise _InvalidSubmittedDataError(msg)
-                restored_data[name] = self._restore_file_value(
-                    output_variable_name=name,
-                    value=value,
-                )
-            elif isinstance(form_input, FileListInputConfig):
-                if not isinstance(value, list):
-                    msg = (
-                        "HumanInput file list input expects a list payload, "
-                        f"output_variable_name={name}, got={type(value).__name__}"
-                    )
-                    raise _InvalidSubmittedDataError(msg)
-                if not all(isinstance(item, Mapping) for item in value):
-                    msg = (
-                        "HumanInput file list input expects list items to be "
-                        "mapping payloads, "
-                        f"output_variable_name={name}"
-                    )
-                    raise _InvalidSubmittedDataError(msg)
-                restored_data[name] = [
-                    self._restore_file_value(
-                        output_variable_name=name,
-                        value=item,
-                    )
-                    for item in value
-                ]
+                case FileListInputConfig():
+                    if not isinstance(value, list):
+                        msg = (
+                            "HumanInput file list input expects a list payload, "
+                            f"output_variable_name={name}, got={type(value).__name__}"
+                        )
+                        raise _InvalidSubmittedDataError(msg)
+                    if not all(isinstance(item, Mapping) for item in value):
+                        msg = (
+                            "HumanInput file list input expects list items to be "
+                            "mapping payloads, "
+                            f"output_variable_name={name}"
+                        )
+                        raise _InvalidSubmittedDataError(msg)
+                    restored_data[name] = build_segment([
+                        self._restore_file_value(
+                            output_variable_name=name,
+                            value=item,
+                        )
+                        for item in value
+                    ])
+                case ParagraphInputConfig() | SelectInputConfig():
+                    if not isinstance(value, str):
+                        msg = (
+                            "HumanInput file list input expects a string, "
+                            f"output_variable_name={name}, got={type(value).__name__}"
+                        )
+                        raise _InvalidSubmittedDataError(msg)
+                    restored_data[name] = build_segment(value)
+                case _:
+                    assert_never(form_input)
 
         return restored_data
 
@@ -481,53 +500,6 @@ class HumanInputNode(Node[HumanInputNodeData]):
             cls._OUTPUT_FIELD_RENDERED_CONTENT: build_segment(rendered_content),
             cls._OUTPUT_FIELD_ACTION_VALUE: build_segment(action_value),
         }
-
-    def _build_output_value(
-        self,
-        form_input: FormInputConfig,
-        value: Any,
-    ) -> Segment:
-        if isinstance(form_input, FileInputConfig):
-            return self._build_file_output_value(
-                output_variable_name=form_input.output_variable_name,
-                value=value,
-            )
-        if isinstance(form_input, FileListInputConfig):
-            return self._build_file_list_output_value(
-                output_variable_name=form_input.output_variable_name,
-                value=value,
-            )
-        return value if isinstance(value, Segment) else build_segment(value)
-
-    @staticmethod
-    def _build_file_output_value(
-        *,
-        output_variable_name: str,
-        value: Any,
-    ) -> FileSegment:
-        segment = build_segment(value)
-        if isinstance(segment, FileSegment):
-            return segment
-        msg = (
-            "HumanInput file output must restore to FileSegment, "
-            f"output_variable_name={output_variable_name}"
-        )
-        raise ValueError(msg)
-
-    @staticmethod
-    def _build_file_list_output_value(
-        *,
-        output_variable_name: str,
-        value: Any,
-    ) -> ArrayFileSegment:
-        segment = build_segment(value)
-        if isinstance(segment, ArrayFileSegment):
-            return segment
-        msg = (
-            "HumanInput file list output must restore to ArrayFileSegment, "
-            f"output_variable_name={output_variable_name}"
-        )
-        raise ValueError(msg)
 
     @classmethod
     @override

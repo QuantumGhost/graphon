@@ -1,8 +1,6 @@
 from collections.abc import Generator, Mapping
 from typing import Any, Protocol
 
-from pydantic import JsonValue
-
 from graphon.file.models import File
 from graphon.http.protocols import HttpClientProtocol
 

@@ -10,8 +10,13 @@ from graphon.file import File, FileTransferMethod, FileType
 from graphon.nodes.human_input.entities import (
     FileInputConfig,
     FileListInputConfig,
+    FormInputConfig,
     HumanInputNodeData,
+    ParagraphInputConfig,
+    SelectInputConfig,
+    StringListSource,
 )
+from graphon.nodes.human_input.enums import ValueSourceType
 from graphon.nodes.human_input.human_input_node import (
     HumanInputNode,
     _InvalidSubmittedDataError,
@@ -22,6 +27,7 @@ from graphon.nodes.runtime import (
     HumanInputNodeRuntimeProtocol,
 )
 from graphon.runtime.graph_runtime_state import GraphRuntimeState
+from graphon.variables.segments import ArrayFileSegment, FileSegment, StringSegment
 
 from ...helpers import build_graph_init_params, build_variable_pool
 
@@ -67,18 +73,22 @@ class _FileReferenceFactory(FileReferenceFactoryProtocol):
 def _build_node(
     *,
     file_reference_factory: FileReferenceFactoryProtocol,
+    inputs: list[FormInputConfig] | None = None,
 ) -> HumanInputNode:
+    if inputs is None:
+        inputs = [
+            FileInputConfig(output_variable_name="attachment"),
+            FileListInputConfig(
+                output_variable_name="attachments",
+                number_limits=2,
+            ),
+        ]
+
     return HumanInputNode(
         node_id="human-node",
         data=HumanInputNodeData(
             title="Collect Input",
-            inputs=[
-                FileInputConfig(output_variable_name="attachment"),
-                FileListInputConfig(
-                    output_variable_name="attachments",
-                    number_limits=2,
-                ),
-            ],
+            inputs=inputs,
         ),
         graph_init_params=build_graph_init_params(
             graph_config={"nodes": [], "edges": []},
@@ -92,9 +102,26 @@ def _build_node(
     )
 
 
-def test_restore_submitted_data_rebuilds_file_values_from_mappings() -> None:
+def test_restore_submitted_data_builds_segments_from_submitted_values() -> None:
     factory = _FileReferenceFactory()
-    node = _build_node(file_reference_factory=factory)
+    node = _build_node(
+        file_reference_factory=factory,
+        inputs=[
+            FileInputConfig(output_variable_name="attachment"),
+            FileListInputConfig(
+                output_variable_name="attachments",
+                number_limits=2,
+            ),
+            ParagraphInputConfig(output_variable_name="name"),
+            SelectInputConfig(
+                output_variable_name="choice",
+                option_source=StringListSource(
+                    type=ValueSourceType.CONSTANT,
+                    value=["yes", "no"],
+                ),
+            ),
+        ],
+    )
 
     restored = node._restore_submitted_data(
         submitted_data={
@@ -119,16 +146,19 @@ def test_restore_submitted_data_rebuilds_file_values_from_mappings() -> None:
                 }
             ],
             "name": "Alice",
+            "choice": "yes",
+            "unexpected": "keep as segment",
         },
     )
 
-    assert isinstance(restored["attachment"], File)
-    assert restored["attachment"].related_id == "upload-1"
-    assert isinstance(restored["attachments"], list)
-    assert len(restored["attachments"]) == 1
-    assert isinstance(restored["attachments"][0], File)
-    assert restored["attachments"][0].related_id == "upload-2"
-    assert restored["name"] == "Alice"
+    assert isinstance(restored["attachment"], FileSegment)
+    assert restored["attachment"].value.related_id == "upload-1"
+    assert isinstance(restored["attachments"], ArrayFileSegment)
+    assert len(restored["attachments"].value) == 1
+    assert restored["attachments"].value[0].related_id == "upload-2"
+    assert restored["name"] == StringSegment(value="Alice")
+    assert restored["choice"] == StringSegment(value="yes")
+    assert restored["unexpected"] == StringSegment(value="keep as segment")
     assert len(factory.mappings) == 2
 
 
@@ -175,5 +205,38 @@ def test_restore_submitted_data_rejects_non_mapping_file_list_items() -> None:
                     },
                     "upload-3",
                 ],
+            },
+        )
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_config"),
+    [
+        ("name", ParagraphInputConfig(output_variable_name="name")),
+        (
+            "choice",
+            SelectInputConfig(
+                output_variable_name="choice",
+                option_source=StringListSource(
+                    type=ValueSourceType.CONSTANT,
+                    value=["yes", "no"],
+                ),
+            ),
+        ),
+    ],
+)
+def test_restore_submitted_data_rejects_non_string_text_payload(
+    field_name: str,
+    field_config: FormInputConfig,
+) -> None:
+    node = _build_node(
+        file_reference_factory=_FileReferenceFactory(),
+        inputs=[field_config],
+    )
+
+    with pytest.raises(_InvalidSubmittedDataError, match="expects a string"):
+        node._restore_submitted_data(
+            submitted_data={
+                field_name: 123,
             },
         )
