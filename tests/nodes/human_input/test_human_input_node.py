@@ -23,6 +23,7 @@ from graphon.nodes.human_input.enums import (
     ValueSourceType,
 )
 from graphon.nodes.human_input.human_input_node import HumanInputNode
+from graphon.nodes.protocols import FileReferenceFactoryProtocol
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,
     HumanInputNodeRuntimeProtocol,
@@ -59,14 +60,20 @@ class _RuntimeStub(HumanInputNodeRuntimeProtocol):
         msg = "create_form should not be called in resolve_default_values tests"
         raise AssertionError(msg)
 
-    def restore_submitted_data(
-        self,
-        *,
-        node_data: HumanInputNodeData,
-        submitted_data: Mapping[str, Any],
-    ) -> Mapping[str, Any]:
-        _ = node_data
-        return submitted_data
+
+class _FileReferenceFactory(FileReferenceFactoryProtocol):
+    def build_from_mapping(self, *, mapping: Mapping[str, Any]) -> File:
+        return File(
+            file_id=mapping.get("id"),
+            file_type=FileType(mapping["type"]),
+            transfer_method=FileTransferMethod(mapping["transfer_method"]),
+            remote_url=mapping.get("remote_url"),
+            related_id=mapping.get("related_id"),
+            filename=mapping.get("filename"),
+            extension=mapping.get("extension"),
+            mime_type=mapping.get("mime_type"),
+            size=mapping.get("size", -1),
+        )
 
 
 def _build_node(
@@ -90,6 +97,7 @@ def _build_node(
         ),
         graph_runtime_state=runtime_state,
         runtime=_RuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
 
@@ -159,27 +167,27 @@ class _SubmittedFormStub(HumanInputFormStateProtocol):
     @property
     def submitted_data(self) -> Mapping[str, Any] | None:
         return {
-            "attachment": File(
-                file_id="file-1",
-                file_type=FileType.DOCUMENT,
-                transfer_method=FileTransferMethod.LOCAL_FILE,
-                related_id="upload-1",
-                filename="resume.pdf",
-                extension=".pdf",
-                mime_type="application/pdf",
-                size=128,
-            ),
+            "attachment": {
+                "id": "file-1",
+                "type": FileType.DOCUMENT,
+                "transfer_method": FileTransferMethod.LOCAL_FILE,
+                "related_id": "upload-1",
+                "filename": "resume.pdf",
+                "extension": ".pdf",
+                "mime_type": "application/pdf",
+                "size": 128,
+            },
             "attachments": [
-                File(
-                    file_id="file-2",
-                    file_type=FileType.DOCUMENT,
-                    transfer_method=FileTransferMethod.LOCAL_FILE,
-                    related_id="upload-2",
-                    filename="a.pdf",
-                    extension=".pdf",
-                    mime_type="application/pdf",
-                    size=64,
-                ),
+                {
+                    "id": "file-2",
+                    "type": FileType.DOCUMENT,
+                    "transfer_method": FileTransferMethod.LOCAL_FILE,
+                    "related_id": "upload-2",
+                    "filename": "a.pdf",
+                    "extension": ".pdf",
+                    "mime_type": "application/pdf",
+                    "size": 64,
+                },
             ],
         }
 
@@ -313,6 +321,7 @@ def test_human_input_resume_emits_runtime_file_segments() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_ResumeRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
     events = list(node.run())
@@ -356,6 +365,7 @@ def test_human_input_resume_filters_unknown_fields_from_outputs() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_ResumeTextRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
     events = list(node.run())
@@ -401,6 +411,7 @@ def test_human_input_resume_adds_special_outputs_separately() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_ResumeTextRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
     events = list(node.run())
@@ -435,6 +446,7 @@ def test_human_input_timeout_adds_special_outputs_separately() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_TimeoutRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
     events = list(node.run())
@@ -469,6 +481,7 @@ def test_human_input_submission_emits_action_value_outputs() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_ResumeRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
 
     events = list(node._run())
@@ -509,6 +522,7 @@ def test_human_input_timeout_emits_empty_action_value() -> None:
         ),
         graph_runtime_state=runtime_state,
         runtime=_TimeoutRuntimeStub(),
+        file_reference_factory=_FileReferenceFactory(),
     )
     events = list(node._run())
 

@@ -21,6 +21,7 @@ from graphon.node_events.node import (
     StreamCompletedEvent,
 )
 from graphon.nodes.base.node import Node
+from graphon.nodes.protocols import FileReferenceFactoryProtocol
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,
     HumanInputNodeRuntimeProtocol,
@@ -46,6 +47,10 @@ _SELECTED_BRANCH_KEY = "selected_branch"
 
 
 logger = logging.getLogger(__name__)
+
+
+class _InvalidSubmittedDataError(ValueError):
+    """Raised when submitted human-input payload shape does not match config."""
 
 
 class HumanInputNode(Node[HumanInputNodeData]):
@@ -82,6 +87,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
         # Make `runtime` optional once Graphon provides a default human-input
         # runtime adapter instead of requiring an embedding-specific implementation.
         runtime: _HumanInputRuntimeLike,
+        file_reference_factory: FileReferenceFactoryProtocol,
         form_repository: object | None = None,
     ) -> None:
         super().__init__(
@@ -94,6 +100,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
             runtime,
             form_repository=form_repository,
         )
+        self._file_reference_factory = file_reference_factory
 
     @classmethod
     @override
@@ -262,8 +269,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
                 f"form_id={form.id}"
             )
             raise AssertionError(msg)
-        restored_submission_data = self._runtime.restore_submitted_data(
-            node_data=self._node_data,
+        restored_submission_data = self._restore_submitted_data(
             submitted_data=form.submitted_data or {},
         )
         submitted_data = self._build_outputs_from_submitted_data(
@@ -334,6 +340,9 @@ class HumanInputNode(Node[HumanInputNodeData]):
         Text inputs render their submitted value directly. File inputs render as
         stable placeholders so the final content stays readable and does not
         inline transport metadata.
+
+        Returns:
+            the interplated form content
         """
         inputs_by_name = {}
         if form_inputs is not None:
@@ -401,6 +410,63 @@ class HumanInputNode(Node[HumanInputNodeData]):
             outputs[name] = self._build_output_value(form_input, value)
 
         return outputs
+
+    def _restore_submitted_data(
+        self,
+        *,
+        submitted_data: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        restored_data = dict(submitted_data)
+        inputs_by_name = {
+            form_input.output_variable_name: form_input
+            for form_input in self._node_data.inputs
+        }
+
+        for name, value in submitted_data.items():
+            form_input = inputs_by_name.get(name)
+            if isinstance(form_input, FileInputConfig):
+                if not isinstance(value, Mapping):
+                    msg = (
+                        "HumanInput file input expects a mapping payload, "
+                        f"output_variable_name={name}, got={type(value).__name__}"
+                    )
+                    raise _InvalidSubmittedDataError(msg)
+                restored_data[name] = self._restore_file_value(
+                    output_variable_name=name,
+                    value=value,
+                )
+            elif isinstance(form_input, FileListInputConfig):
+                if not isinstance(value, list):
+                    msg = (
+                        "HumanInput file list input expects a list payload, "
+                        f"output_variable_name={name}, got={type(value).__name__}"
+                    )
+                    raise _InvalidSubmittedDataError(msg)
+                if not all(isinstance(item, Mapping) for item in value):
+                    msg = (
+                        "HumanInput file list input expects list items to be "
+                        "mapping payloads, "
+                        f"output_variable_name={name}"
+                    )
+                    raise _InvalidSubmittedDataError(msg)
+                restored_data[name] = [
+                    self._restore_file_value(
+                        output_variable_name=name,
+                        value=item,
+                    )
+                    for item in value
+                ]
+
+        return restored_data
+
+    def _restore_file_value(
+        self,
+        *,
+        output_variable_name: str,
+        value: Any,
+    ) -> Any:
+        _ = output_variable_name
+        return self._file_reference_factory.build_from_mapping(mapping=value)
 
     @classmethod
     def _build_special_outputs(
