@@ -4,7 +4,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any, cast, override
 
 from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import (
@@ -79,6 +79,17 @@ class _QuestionClassifierRunContext:
     rendered_classes: list[Any]
 
 
+@dataclass(frozen=True, slots=True)
+class QuestionClassifierNodeDependencies:
+    """Runtime collaborators required to execute a question-classifier node."""
+
+    model_instance: PreparedLLMProtocol
+    template_renderer: Jinja2TemplateRenderer
+    llm_file_saver: LLMFileSaver
+    memory: PromptMessageMemory | None = None
+    prompt_message_serializer: PromptMessageSerializerProtocol | None = None
+
+
 class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
     node_type = BuiltinNodeTypes.QUESTION_CLASSIFIER
     execution_type = NodeExecutionType.BRANCH
@@ -94,42 +105,114 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
     def __init__(
         self,
         node_id: str,
-        config: QuestionClassifierNodeData,
+        data: QuestionClassifierNodeData,
         *,
         graph_init_params: GraphInitParams,
         graph_runtime_state: GraphRuntimeState,
+        dependencies: QuestionClassifierNodeDependencies | None = None,
         credentials_provider: object | None = None,
         model_factory: object | None = None,
-        model_instance: PreparedLLMProtocol,
+        model_instance: PreparedLLMProtocol | None = None,
         http_client: HttpClientProtocol | None = None,
-        template_renderer: Jinja2TemplateRenderer,
+        template_renderer: Jinja2TemplateRenderer | None = None,
         memory: PromptMessageMemory | None = None,
-        llm_file_saver: LLMFileSaver,
+        llm_file_saver: LLMFileSaver | None = None,
         prompt_message_serializer: PromptMessageSerializerProtocol | None = None,
     ) -> None:
         super().__init__(
             node_id=node_id,
-            config=config,
+            data=data,
             graph_init_params=graph_init_params,
             graph_runtime_state=graph_runtime_state,
         )
         # LLM file outputs, used for MultiModal outputs.
         self._file_outputs = []
 
-        _ = credentials_provider, model_factory, http_client
-        self._model_instance = model_instance
-        self._memory = memory
-        self._template_renderer = template_renderer
+        resolved_dependencies = self._resolve_dependencies(
+            dependencies=dependencies,
+            model_instance=model_instance,
+            template_renderer=template_renderer,
+            memory=memory,
+            llm_file_saver=llm_file_saver,
+            prompt_message_serializer=prompt_message_serializer,
+        )
 
-        self._llm_file_saver = llm_file_saver
+        _ = credentials_provider, model_factory, http_client
+        self._model_instance = resolved_dependencies.model_instance
+        self._memory = resolved_dependencies.memory
+        self._template_renderer = resolved_dependencies.template_renderer
+        self._llm_file_saver = resolved_dependencies.llm_file_saver
         self._prompt_message_serializer = (
-            prompt_message_serializer or _PassthroughPromptMessageSerializer()
+            resolved_dependencies.prompt_message_serializer
+            or _PassthroughPromptMessageSerializer()
         )
 
     @classmethod
     @override
     def version(cls) -> str:
         return "1"
+
+    @staticmethod
+    def _resolve_dependencies(
+        *,
+        dependencies: QuestionClassifierNodeDependencies | None,
+        model_instance: PreparedLLMProtocol | None,
+        template_renderer: Jinja2TemplateRenderer | None,
+        memory: PromptMessageMemory | None,
+        llm_file_saver: LLMFileSaver | None,
+        prompt_message_serializer: PromptMessageSerializerProtocol | None,
+    ) -> QuestionClassifierNodeDependencies:
+        if dependencies is not None:
+            duplicate_arguments = [
+                argument_name
+                for argument_name, argument_value in (
+                    ("model_instance", model_instance),
+                    ("template_renderer", template_renderer),
+                    ("memory", memory),
+                    ("llm_file_saver", llm_file_saver),
+                    ("prompt_message_serializer", prompt_message_serializer),
+                )
+                if argument_value is not None
+            ]
+            if duplicate_arguments:
+                duplicate_arguments_str = ", ".join(sorted(duplicate_arguments))
+                msg = (
+                    "QuestionClassifierNode received runtime collaborators twice. "
+                    "Use either 'dependencies' or the legacy keyword arguments, "
+                    f"not both: {duplicate_arguments_str}."
+                )
+                raise TypeError(msg)
+            return dependencies
+
+        missing_arguments = [
+            argument_name
+            for argument_name, argument_value in (
+                ("model_instance", model_instance),
+                ("template_renderer", template_renderer),
+                ("llm_file_saver", llm_file_saver),
+            )
+            if argument_value is None
+        ]
+        if missing_arguments:
+            missing_arguments_str = ", ".join(sorted(missing_arguments))
+            msg = (
+                "QuestionClassifierNode requires either "
+                "'dependencies' or the legacy keyword arguments: "
+                f"{missing_arguments_str}."
+            )
+            raise TypeError(msg)
+
+        return QuestionClassifierNodeDependencies(
+            model_instance=cast(PreparedLLMProtocol, model_instance),
+            template_renderer=cast(Jinja2TemplateRenderer, template_renderer),
+            llm_file_saver=cast(LLMFileSaver, llm_file_saver),
+            memory=memory,
+            prompt_message_serializer=prompt_message_serializer,
+        )
+
+    @staticmethod
+    def _default_class_label(index: int) -> str:
+        return f"CLASS {index}"
 
     @override
     def _run(self) -> NodeRunResult:
@@ -140,7 +223,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
             result_text, usage, finish_reason = self._invoke_classifier(
                 run_context=run_context,
             )
-            category_name, category_id = self._resolve_category(
+            category_name, category_id, category_label = self._resolve_category(
                 rendered_classes=run_context.rendered_classes,
                 result_text=result_text,
             )
@@ -149,6 +232,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
                 usage=usage,
                 finish_reason=finish_reason,
                 category_name=category_name,
+                category_label=category_label,
                 category_id=category_id,
             )
         except ValueError as e:
@@ -191,6 +275,10 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
             model_instance=model_instance,
             files=files,
         )
+        inputs = {
+            "query": query,
+            **llm_utils.build_model_identity_inputs(model_instance=model_instance),
+        }
         rendered_classes = [
             class_.model_copy(
                 update={"name": variable_pool.convert_template(class_.name).text},
@@ -198,7 +286,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
             for class_ in node_data.classes
         ]
         return _QuestionClassifierRunContext(
-            inputs={"query": query},
+            inputs=inputs,
             model_instance=model_instance,
             prompt_messages=prompt_messages,
             stop=stop,
@@ -277,22 +365,35 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
         *,
         rendered_classes: Sequence[Any],
         result_text: str,
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str, str]:
         category_name = rendered_classes[0].name
         category_id = rendered_classes[0].id
+        category_label = rendered_classes[
+            0
+        ].label or QuestionClassifierNode._default_class_label(1)
         cleaned_result_text = QuestionClassifierNode._strip_think_tags(result_text)
         result_text_json = parse_and_check_json_markdown(cleaned_result_text, [])
         if (
             "category_name" not in result_text_json
             or "category_id" not in result_text_json
         ):
-            return category_name, category_id
+            return category_name, category_id, category_label
 
         category_id_result = result_text_json["category_id"]
-        classes_map = {class_.id: class_.name for class_ in rendered_classes}
+        classes_map = {
+            class_.id: {
+                "name": class_.name,
+                "label": (
+                    class_.label
+                    or QuestionClassifierNode._default_class_label(index + 1)
+                ),
+            }
+            for index, class_ in enumerate(rendered_classes)
+        }
         if category_id_result in classes_map:
-            return classes_map[category_id_result], category_id_result
-        return category_name, category_id
+            category = classes_map[category_id_result]
+            return category["name"], category_id_result, category["label"]
+        return category_name, category_id, category_label
 
     @staticmethod
     def _strip_think_tags(result_text: str) -> str:
@@ -312,6 +413,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
         usage: LLMUsage,
         finish_reason: str | None,
         category_name: str,
+        category_label: str,
         category_id: str,
     ) -> NodeRunResult:
         process_data = {
@@ -327,6 +429,7 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
         }
         outputs = {
             "class_name": category_name,
+            "class_label": category_label,
             "class_id": category_id,
             "usage": jsonable_encoder(usage),
         }
@@ -343,10 +446,6 @@ class QuestionClassifierNode(Node[QuestionClassifierNodeData]):
             },
             llm_usage=usage,
         )
-
-    @property
-    def model_instance(self) -> PreparedLLMProtocol:
-        return self._model_instance
 
     @classmethod
     @override

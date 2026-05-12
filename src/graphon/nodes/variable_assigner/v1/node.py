@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping, Sequence
-from typing import Any, override
+from typing import Any, assert_never, override
 
 from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import BuiltinNodeTypes, WorkflowNodeExecutionStatus
@@ -37,14 +37,14 @@ class VariableAssignerNode(Node[VariableAssignerData]):
     def __init__(
         self,
         node_id: str,
-        config: VariableAssignerData,
+        data: VariableAssignerData,
         *,
         graph_init_params: GraphInitParams,
         graph_runtime_state: GraphRuntimeState,
     ) -> None:
         super().__init__(
             node_id=node_id,
-            config=config,
+            data=data,
             graph_init_params=graph_init_params,
             graph_runtime_state=graph_runtime_state,
         )
@@ -98,7 +98,8 @@ class VariableAssignerNode(Node[VariableAssignerData]):
             msg = "assigned variable not found"
             raise VariableOperatorNodeError(msg)
 
-        match self.node_data.write_mode:
+        write_mode = self.node_data.write_mode
+        match write_mode:
             case WriteMode.OVER_WRITE:
                 income_value = self.graph_runtime_state.variable_pool.get(
                     self.node_data.input_variable_selector,
@@ -139,6 +140,8 @@ class VariableAssignerNode(Node[VariableAssignerData]):
                 updated_variable = original_variable.model_copy(
                     update={"value": income_value.to_object()},
                 )
+            case _:
+                assert_never(write_mode)
 
         updated_variables = [
             common_helpers.variable_to_processed_data(

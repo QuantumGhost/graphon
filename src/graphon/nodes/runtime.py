@@ -32,6 +32,7 @@ class ToolNodeRuntimeProtocol(Protocol):
         node_id: str,
         node_data: ToolNodeData,
         variable_pool: VariablePool | None,
+        node_execution_id: str | None = None,
     ) -> ToolRuntimeHandle: ...
 
     def get_runtime_parameters(
@@ -86,6 +87,53 @@ class HumanInputNodeRuntimeProtocol(Protocol):
         node_data: HumanInputNodeData,
         submitted_data: Mapping[str, Any],
     ) -> Mapping[str, Any]: ...
+
+
+@runtime_checkable
+class HumanInputFormRepositoryBindableRuntimeProtocol(Protocol):
+    """Optional capability for runtimes that require explicit repository binding."""
+
+    def with_form_repository(
+        self,
+        form_repository: object,
+    ) -> HumanInputNodeRuntimeProtocol: ...
+
+
+_HumanInputRuntimeLike = (
+    HumanInputNodeRuntimeProtocol | HumanInputFormRepositoryBindableRuntimeProtocol
+)
+
+
+def _normalize_human_input_runtime(
+    runtime: _HumanInputRuntimeLike,
+    *,
+    form_repository: object | None = None,
+) -> HumanInputNodeRuntimeProtocol:
+    """Return a runnable human-input runtime, binding a repository when needed."""
+    if form_repository is not None and isinstance(
+        runtime, HumanInputFormRepositoryBindableRuntimeProtocol
+    ):
+        bound_runtime = runtime.with_form_repository(form_repository)
+        if not isinstance(bound_runtime, HumanInputNodeRuntimeProtocol):
+            msg = "with_form_repository() must return a HumanInput runtime"
+            raise TypeError(msg)
+        return bound_runtime
+
+    if isinstance(runtime, HumanInputNodeRuntimeProtocol):
+        return runtime
+
+    if isinstance(runtime, HumanInputFormRepositoryBindableRuntimeProtocol):
+        msg = (
+            "form_repository is required when runtime only supports "
+            "with_form_repository()"
+        )
+        raise TypeError(msg)
+
+    msg = (
+        "runtime must implement HumanInputNodeRuntimeProtocol or "
+        "HumanInputFormRepositoryBindableRuntimeProtocol"
+    )
+    raise TypeError(msg)
 
 
 class HumanInputFormStateProtocol(Protocol):

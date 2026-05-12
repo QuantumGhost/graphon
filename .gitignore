@@ -9,11 +9,13 @@ dist/
 
 # Environments
 .venv
-examples/*/.env
+.env
 
-# Ruff stuff:
+# Ruff
 .ruff_cache/
 
+# Plugin Daemon Slim
+.slim
 # Unit test / coverage reports
 htmlcov/
 .tox/

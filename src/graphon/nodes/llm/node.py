@@ -8,7 +8,7 @@ import re
 import time
 from collections.abc import Generator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, override
+from typing import Any, Literal, assert_never, override
 
 from graphon.entities.graph_init_params import GraphInitParams
 from graphon.enums import (
@@ -128,7 +128,7 @@ class LLMNode(Node[LLMNodeData]):
     def __init__(
         self,
         node_id: str,
-        config: LLMNodeData,
+        data: LLMNodeData,
         *,
         graph_init_params: GraphInitParams,
         graph_runtime_state: GraphRuntimeState,
@@ -145,7 +145,7 @@ class LLMNode(Node[LLMNodeData]):
     ) -> None:
         super().__init__(
             node_id=node_id,
-            config=config,
+            data=data,
             graph_init_params=graph_init_params,
             graph_runtime_state=graph_runtime_state,
         )
@@ -253,6 +253,9 @@ class LLMNode(Node[LLMNodeData]):
             collected_context=collected_context,
         )
         model_instance = self._prepare_model_instance()
+        node_inputs.update(
+            llm_utils.build_model_identity_inputs(model_instance=model_instance),
+        )
         prompt_messages, stop = LLMNode.fetch_prompt_messages(
             sys_query=self._resolve_memory_query(),
             sys_files=files,
@@ -377,6 +380,9 @@ class LLMNode(Node[LLMNodeData]):
                 )
             break
 
+        node_inputs.update(
+            llm_utils.build_model_identity_inputs(model_instance=self._model_instance),
+        )
         process_data.update(
             self._build_process_data(
                 prompt_messages=prompt_messages,
@@ -1790,9 +1796,11 @@ def _combine_message_content_with_role(
             return AssistantPromptMessage(content=contents)
         case PromptMessageRole.SYSTEM:
             return SystemPromptMessage(content=contents)
-        case _:
+        case PromptMessageRole.TOOL:
             msg = f"Role {role} is not supported"
             raise NotImplementedError(msg)
+        case _:
+            assert_never(role)
 
 
 def _render_jinja2_message(

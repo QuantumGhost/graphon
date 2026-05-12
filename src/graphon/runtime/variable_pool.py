@@ -4,9 +4,9 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from graphon.file import file_manager
 from graphon.file.enums import FileAttribute
@@ -36,6 +36,7 @@ class VariablePool(BaseModel):
     _ENVIRONMENT_VARIABLE_NODE_ID = "env"
     _CONVERSATION_VARIABLE_NODE_ID = "conversation"
     _RAG_PIPELINE_VARIABLE_NODE_ID = "rag"
+    model_config = ConfigDict(extra="forbid")
 
     # Variable dictionary is a dictionary for looking up variables by their selector.
     # The first element of the selector is the node id.
@@ -45,9 +46,6 @@ class VariablePool(BaseModel):
     #
     # The `variable_dictionary` is the source of truth for the runtime
     # value of variables.
-    # For immutable variables as system variables and environment variables,
-    # the value in variable_dictionary should be the same as values in
-    # corresponding fields below.
     variable_dictionary: defaultdict[
         str,
         Annotated[dict[str, Variable], Field(default_factory=dict)],
@@ -56,56 +54,68 @@ class VariablePool(BaseModel):
         default_factory=_default_variable_dictionary,
     )
 
-    # The following fields `system_variables`, `environment_variables`
-    # and `conversation_variables` hold initial values for these variables.
-    # These fields is only used for initialization and their values may
-    # not corresponding to the actual runtime values.
-    system_variables: Sequence[Variable] = Field(default_factory=tuple, exclude=True)
-    environment_variables: Sequence[Variable] = Field(
-        default_factory=tuple,
-        exclude=True,
-    )
-    conversation_variables: Sequence[Variable] = Field(
-        default_factory=tuple,
-        exclude=True,
-    )
-    rag_pipeline_variables: Sequence[RAGPipelineVariableInput] = Field(
-        default_factory=tuple,
-        exclude=True,
-    )
-    user_inputs: Mapping[str, Any] = Field(default_factory=dict, exclude=True)
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_legacy_constructor_kwargs(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
 
-    @model_validator(mode="after")
-    def _load_legacy_bootstrap_inputs(self) -> VariablePool:
-        """Accept legacy constructor kwargs that still appear throughout the workflow
-        layer while keeping serialized state focused on `variable_dictionary`.
+        legacy_keys = sorted(
+            {
+                "system_variables",
+                "environment_variables",
+                "conversation_variables",
+                "rag_pipeline_variables",
+                "user_inputs",
+            }.intersection(value),
+        )
+        if not legacy_keys:
+            return value
+
+        joined_keys = ", ".join(legacy_keys)
+        msg = (
+            "VariablePool() no longer accepts legacy bootstrap inputs "
+            f"({joined_keys}); use VariablePool.from_bootstrap(...)."
+        )
+        raise ValueError(msg)
+
+    @classmethod
+    def from_bootstrap(
+        cls,
+        *,
+        system_variables: Sequence[Variable] = (),
+        environment_variables: Sequence[Variable] = (),
+        conversation_variables: Sequence[Variable] = (),
+        rag_pipeline_variables: Sequence[RAGPipelineVariableInput] = (),
+        user_inputs: Mapping[str, Any] | None = None,
+    ) -> Self:
+        """Build a pool from workflow bootstrap inputs.
+
+        The default constructor remains focused on the normalized
+        `variable_dictionary` payload. `user_inputs` is accepted for
+        compatibility with older workflow bootstrap code but is not stored on the
+        pool.
 
         Returns:
-            The normalized `VariablePool` instance after ingesting legacy inputs.
-
+            A normalized variable pool populated from the provided bootstrap inputs.
         """
-        self._ingest_legacy_variables(
-            self.system_variables,
-            node_id=self._SYSTEM_VARIABLE_NODE_ID,
-        )
-        self._ingest_legacy_variables(
-            self.environment_variables,
-            node_id=self._ENVIRONMENT_VARIABLE_NODE_ID,
-        )
-        self._ingest_legacy_variables(
-            self.conversation_variables,
-            node_id=self._CONVERSATION_VARIABLE_NODE_ID,
-        )
-        self._ingest_legacy_rag_variables(self.rag_pipeline_variables)
+        del user_inputs
 
-        # These kwargs are accepted for compatibility but should not affect the
-        # stable serialized form or model equality.
-        self.system_variables = ()
-        self.environment_variables = ()
-        self.conversation_variables = ()
-        self.rag_pipeline_variables = ()
-        self.user_inputs = {}
-        return self
+        pool = cls()
+        pool._ingest_legacy_variables(
+            system_variables,
+            node_id=pool._SYSTEM_VARIABLE_NODE_ID,
+        )
+        pool._ingest_legacy_variables(
+            environment_variables,
+            node_id=pool._ENVIRONMENT_VARIABLE_NODE_ID,
+        )
+        pool._ingest_legacy_variables(
+            conversation_variables,
+            node_id=pool._CONVERSATION_VARIABLE_NODE_ID,
+        )
+        pool._ingest_legacy_rag_variables(rag_pipeline_variables)
+        return pool
 
     def _ingest_legacy_variables(
         self,

@@ -8,6 +8,7 @@ from graphon.graph_events.node import (
     NodeRunHumanInputFormFilledEvent,
     NodeRunSucceededEvent,
 )
+from graphon.node_events import HumanInputFormTimeoutEvent, StreamCompletedEvent
 from graphon.nodes.human_input.entities import (
     FileInputConfig,
     FileListInputConfig,
@@ -17,7 +18,10 @@ from graphon.nodes.human_input.entities import (
     StringSource,
     UserActionConfig,
 )
-from graphon.nodes.human_input.enums import HumanInputFormStatus, ValueSourceType
+from graphon.nodes.human_input.enums import (
+    HumanInputFormStatus,
+    ValueSourceType,
+)
 from graphon.nodes.human_input.human_input_node import HumanInputNode
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,
@@ -76,7 +80,7 @@ def _build_node(
     )
     return HumanInputNode(
         node_id="human-node",
-        config=HumanInputNodeData(
+        data=HumanInputNodeData(
             title="Collect Input",
             form_content="Profile",
             inputs=inputs,
@@ -292,7 +296,7 @@ def test_human_input_resume_emits_runtime_file_segments() -> None:
     )
     node = HumanInputNode(
         node_id="human-node",
-        config=HumanInputNodeData(
+        data=HumanInputNodeData(
             title="Collect Input",
             form_content="Attachment submitted",
             inputs=[
@@ -339,7 +343,7 @@ def test_human_input_resume_filters_unknown_fields_from_outputs() -> None:
     )
     node = HumanInputNode(
         node_id="human-node",
-        config=HumanInputNodeData(
+        data=HumanInputNodeData(
             title="Collect Input",
             form_content="Name: {{#$output.name#}}",
             inputs=[
@@ -367,6 +371,7 @@ def test_human_input_resume_filters_unknown_fields_from_outputs() -> None:
     assert set(result.node_run_result.outputs) == {
         "name",
         "__action_id",
+        "__action_value",
         "__rendered_content",
     }
     assert isinstance(result.node_run_result.outputs["name"], StringSegment)
@@ -383,7 +388,7 @@ def test_human_input_resume_adds_special_outputs_separately() -> None:
     )
     node = HumanInputNode(
         node_id="human-node",
-        config=HumanInputNodeData(
+        data=HumanInputNodeData(
             title="Collect Input",
             form_content="Name: {{#$output.name#}}",
             inputs=[
@@ -417,7 +422,7 @@ def test_human_input_timeout_adds_special_outputs_separately() -> None:
     )
     node = HumanInputNode(
         node_id="human-node",
-        config=HumanInputNodeData(
+        data=HumanInputNodeData(
             title="Collect Input",
             form_content="Name: {{#$output.name#}}",
             inputs=[
@@ -438,5 +443,80 @@ def test_human_input_timeout_adds_special_outputs_separately() -> None:
     assert isinstance(result, NodeRunSucceededEvent)
     assert result.node_run_result.outputs == {
         "__action_id": StringSegment(value=""),
+        "__action_value": StringSegment(value=""),
         "__rendered_content": StringSegment(value="Timed out content"),
     }
+
+
+def test_human_input_submission_emits_action_value_outputs() -> None:
+
+    runtime_state = GraphRuntimeState(
+        variable_pool=build_variable_pool(variables=()),
+        start_at=perf_counter(),
+    )
+    node = HumanInputNode(
+        node_id="human-node",
+        data=HumanInputNodeData(
+            title="Collect Input",
+            form_content="Name: {{#$output.name#}}",
+            inputs=[
+                ParagraphInputConfig(output_variable_name="name"),
+            ],
+            user_actions=[UserActionConfig(id="approve", title="Approve")],
+        ),
+        graph_init_params=build_graph_init_params(
+            graph_config={"nodes": [], "edges": []},
+        ),
+        graph_runtime_state=runtime_state,
+        runtime=_ResumeRuntimeStub(),
+    )
+
+    events = list(node._run())
+    completed = next(
+        event for event in events if isinstance(event, StreamCompletedEvent)
+    )
+
+    assert completed.node_run_result.outputs["__action_id"] == StringSegment(
+        value="approve"
+    )
+    assert completed.node_run_result.outputs["__action_value"] == StringSegment(
+        value="Approve"
+    )
+
+
+def test_human_input_timeout_emits_empty_action_value() -> None:
+
+    runtime_state = GraphRuntimeState(
+        variable_pool=build_variable_pool(variables=()),
+        start_at=perf_counter(),
+    )
+    node = HumanInputNode(
+        node_id="human-node",
+        data=HumanInputNodeData(
+            title="Collect Input",
+            form_content="Name: {{#$output.name#}}",
+            inputs=[
+                ParagraphInputConfig(output_variable_name="name"),
+            ],
+            user_actions=[
+                UserActionConfig(
+                    id="approve", title="card_visa_enterprise_001_long_value"
+                )
+            ],
+        ),
+        graph_init_params=build_graph_init_params(
+            graph_config={"nodes": [], "edges": []},
+        ),
+        graph_runtime_state=runtime_state,
+        runtime=_TimeoutRuntimeStub(),
+    )
+    events = list(node._run())
+
+    assert any(isinstance(event, HumanInputFormTimeoutEvent) for event in events)
+    completed = next(
+        event for event in events if isinstance(event, StreamCompletedEvent)
+    )
+    assert completed.node_run_result.outputs["__action_id"] == StringSegment(value="")
+    assert completed.node_run_result.outputs["__action_value"] == StringSegment(
+        value=""
+    )

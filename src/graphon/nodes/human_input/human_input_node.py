@@ -24,6 +24,8 @@ from graphon.nodes.base.node import Node
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,
     HumanInputNodeRuntimeProtocol,
+    _HumanInputRuntimeLike,
+    _normalize_human_input_runtime,
 )
 from graphon.runtime.graph_runtime_state import GraphRuntimeState
 from graphon.variables.factory import build_segment
@@ -64,6 +66,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
 
     _node_data: HumanInputNodeData
     _OUTPUT_FIELD_ACTION_ID = "__action_id"
+    _OUTPUT_FIELD_ACTION_VALUE = "__action_value"
     _OUTPUT_FIELD_RENDERED_CONTENT = "__rendered_content"
     _TIMEOUT_HANDLE = _TIMEOUT_ACTION_ID = "__timeout"
 
@@ -71,35 +74,26 @@ class HumanInputNode(Node[HumanInputNodeData]):
     def __init__(
         self,
         node_id: str,
-        config: HumanInputNodeData,
+        data: HumanInputNodeData,
         *,
         graph_init_params: GraphInitParams,
         graph_runtime_state: GraphRuntimeState,
         # TODO @-LAN: See https://github.com/langgenius/graphon/issues/new/choose.  # noqa: FIX002
         # Make `runtime` optional once Graphon provides a default human-input
         # runtime adapter instead of requiring an embedding-specific implementation.
-        runtime: HumanInputNodeRuntimeProtocol,
+        runtime: _HumanInputRuntimeLike,
         form_repository: object | None = None,
     ) -> None:
         super().__init__(
             node_id=node_id,
-            config=config,
+            data=data,
             graph_init_params=graph_init_params,
             graph_runtime_state=graph_runtime_state,
         )
-        if form_repository is not None:
-            with_form_repository = getattr(
-                runtime,
-                "with_form_repository",
-                None,
-            )
-            if callable(with_form_repository):
-                updated_runtime = with_form_repository(form_repository)
-                if not isinstance(updated_runtime, HumanInputNodeRuntimeProtocol):
-                    msg = "with_form_repository() must return a HumanInput runtime"
-                    raise TypeError(msg)
-                runtime = updated_runtime
-        self._runtime: HumanInputNodeRuntimeProtocol = runtime
+        self._runtime: HumanInputNodeRuntimeProtocol = _normalize_human_input_runtime(
+            runtime,
+            form_repository=form_repository,
+        )
 
     @classmethod
     @override
@@ -249,6 +243,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
                     status=WorkflowNodeExecutionStatus.SUCCEEDED,
                     outputs=self._build_special_outputs(
                         action_id="",
+                        action_value="",
                         rendered_content=form.rendered_content,
                     ),
                     edge_source_handle=self._TIMEOUT_HANDLE,
@@ -274,6 +269,11 @@ class HumanInputNode(Node[HumanInputNodeData]):
         submitted_data = self._build_outputs_from_submitted_data(
             restored_submission_data
         )
+        selected_action_value = next(
+            ua.title
+            for ua in self._node_data.user_actions
+            if ua.id == selected_action_id
+        )
         rendered_content = self.render_form_content_with_outputs(
             form.rendered_content,
             submitted_data,
@@ -282,6 +282,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
         )
         outputs = dict(submitted_data) | self._build_special_outputs(
             action_id=selected_action_id,
+            action_value=selected_action_value,
             rendered_content=rendered_content,
         )
 
@@ -298,6 +299,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
         yield StreamCompletedEvent(
             node_run_result=NodeRunResult(
                 status=WorkflowNodeExecutionStatus.SUCCEEDED,
+                inputs=submitted_data,
                 outputs=outputs,
                 edge_source_handle=selected_action_id,
             ),
@@ -336,7 +338,8 @@ class HumanInputNode(Node[HumanInputNodeData]):
         inputs_by_name = {}
         if form_inputs is not None:
             inputs_by_name = {
-                form_input.output_variable_name: form_input for form_input in form_inputs
+                form_input.output_variable_name: form_input
+                for form_input in form_inputs
             }
 
         rendered_content = form_content
@@ -404,11 +407,13 @@ class HumanInputNode(Node[HumanInputNodeData]):
         cls,
         *,
         action_id: str,
+        action_value: str,
         rendered_content: str,
     ) -> dict[str, Segment]:
         return {
             cls._OUTPUT_FIELD_ACTION_ID: build_segment(action_id),
             cls._OUTPUT_FIELD_RENDERED_CONTENT: build_segment(rendered_content),
+            cls._OUTPUT_FIELD_ACTION_VALUE: build_segment(action_value),
         }
 
     def _build_output_value(

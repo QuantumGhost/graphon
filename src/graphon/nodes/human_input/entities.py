@@ -9,7 +9,7 @@ import abc
 import re
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timedelta
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Literal, Self, assert_never
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
@@ -208,7 +208,7 @@ class UserActionConfig(BaseModel):
     #
     # The id must be a valid identifier (satisfy the _IDENTIFIER_PATTERN above.)
     id: str = Field(max_length=20)
-    title: str = Field(max_length=20)
+    title: str = Field(max_length=100)
     button_style: ButtonStyle = ButtonStyle.DEFAULT
 
     @field_validator("id")
@@ -261,12 +261,13 @@ class HumanInputNodeData(BaseNodeData):
         return user_actions
 
     def expiration_time(self, start_time: datetime) -> datetime:
-        if self.timeout_unit == TimeoutUnit.HOUR:
-            return start_time + timedelta(hours=self.timeout)
-        if self.timeout_unit == TimeoutUnit.DAY:
-            return start_time + timedelta(days=self.timeout)
-        msg = "unknown timeout unit."
-        raise AssertionError(msg)
+        match self.timeout_unit:
+            case TimeoutUnit.HOUR:
+                return start_time + timedelta(hours=self.timeout)
+            case TimeoutUnit.DAY:
+                return start_time + timedelta(days=self.timeout)
+            case _:
+                assert_never(self.timeout_unit)
 
     def outputs_field_names(self) -> Sequence[str]:
         return [
@@ -312,6 +313,24 @@ class HumanInputNodeData(BaseNodeData):
             if action.id == action_id:
                 return action.title
         return action_id
+
+    def must_resolve_action_value(self, action_id: str) -> str:
+        """Resolve the selected action's workflow-facing value by id.
+
+        This method should only be called with action ids that have already been
+        validated against the node configuration.
+
+        Returns:
+            The configured workflow-facing value for the selected action id.
+
+        Raises:
+            AssertionError: If the action id is not present in the node config.
+        """
+        for action in self.user_actions:
+            if action.id == action_id:
+                return action.title
+        msg = f"Invalid action: {action_id}"
+        raise AssertionError(msg)
 
 
 class FormDefinition(BaseModel):
