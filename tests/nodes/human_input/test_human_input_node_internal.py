@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from graphon.file import File, FileTransferMethod, FileType
+from graphon.nodes.human_input import _exc as exc
 from graphon.nodes.human_input.entities import (
     FileInputConfig,
     FileListInputConfig,
@@ -17,10 +18,7 @@ from graphon.nodes.human_input.entities import (
     StringListSource,
 )
 from graphon.nodes.human_input.enums import ValueSourceType
-from graphon.nodes.human_input.human_input_node import (
-    HumanInputNode,
-    _InvalidSubmittedDataError,
-)
+from graphon.nodes.human_input.human_input_node import HumanInputNode
 from graphon.nodes.protocols import FileReferenceFactoryProtocol
 from graphon.nodes.runtime import (
     HumanInputFormStateProtocol,
@@ -165,7 +163,9 @@ def test_restore_submitted_data_builds_segments_from_submitted_values() -> None:
 def test_restore_submitted_data_rejects_non_mapping_file_payload() -> None:
     node = _build_node(file_reference_factory=_FileReferenceFactory())
 
-    with pytest.raises(_InvalidSubmittedDataError, match="expects a mapping payload"):
+    with pytest.raises(
+        exc.InvalidSubmittedDataError, match="expects a mapping payload"
+    ):
         node._restore_submitted_data(
             submitted_data={
                 "attachment": "upload-1",
@@ -176,7 +176,7 @@ def test_restore_submitted_data_rejects_non_mapping_file_payload() -> None:
 def test_restore_submitted_data_rejects_non_list_file_list_payload() -> None:
     node = _build_node(file_reference_factory=_FileReferenceFactory())
 
-    with pytest.raises(_InvalidSubmittedDataError, match="expects a list payload"):
+    with pytest.raises(exc.InvalidSubmittedDataError, match="expects a list payload"):
         node._restore_submitted_data(
             submitted_data={
                 "attachments": {
@@ -192,7 +192,7 @@ def test_restore_submitted_data_rejects_non_mapping_file_list_items() -> None:
     node = _build_node(file_reference_factory=_FileReferenceFactory())
 
     with pytest.raises(
-        _InvalidSubmittedDataError,
+        exc.InvalidSubmittedDataError,
         match="expects list items to be mapping payloads",
     ):
         node._restore_submitted_data(
@@ -234,7 +234,7 @@ def test_restore_submitted_data_rejects_non_string_text_payload(
         inputs=[field_config],
     )
 
-    with pytest.raises(_InvalidSubmittedDataError, match="expects a string"):
+    with pytest.raises(exc.InvalidSubmittedDataError, match="expects a string"):
         node._restore_submitted_data(
             submitted_data={
                 field_name: 123,

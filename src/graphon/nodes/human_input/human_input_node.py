@@ -33,6 +33,7 @@ from graphon.variables.factory import build_segment
 from graphon.variables.segments import Segment
 from graphon.workflow_type_encoder import WorkflowRuntimeTypeConverter
 
+from . import _exc as exc
 from .entities import (
     FileInputConfig,
     FileListInputConfig,
@@ -47,10 +48,6 @@ _SELECTED_BRANCH_KEY = "selected_branch"
 
 
 logger = logging.getLogger(__name__)
-
-
-class _InvalidSubmittedDataError(ValueError):
-    """Raised when submitted human-input payload shape does not match config."""
 
 
 class HumanInputNode(Node[HumanInputNodeData]):
@@ -412,8 +409,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
             graphon runtime values.
 
         Raises:
-            _InvalidSubmittedDataError: if submission data are invalid.
-            This exception type is intentionally private.
+            InvalidSubmittedDataError: if submission data are invalid.
         """
         # NOTE: ideally this logic shoule be integrated into
         # `HumanInputFormStateProtocol.submitted_data`.
@@ -437,7 +433,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
                             "HumanInput file input expects a mapping payload, "
                             f"output_variable_name={name}, got={type(value).__name__}"
                         )
-                        raise _InvalidSubmittedDataError(msg)
+                        raise exc.InvalidSubmittedDataError(msg)
                     restored_data[name] = build_segment(
                         self._restore_file_value(
                             output_variable_name=name,
@@ -450,14 +446,14 @@ class HumanInputNode(Node[HumanInputNodeData]):
                             "HumanInput file list input expects a list payload, "
                             f"output_variable_name={name}, got={type(value).__name__}"
                         )
-                        raise _InvalidSubmittedDataError(msg)
+                        raise exc.InvalidSubmittedDataError(msg)
                     if not all(isinstance(item, Mapping) for item in value):
                         msg = (
                             "HumanInput file list input expects list items to be "
                             "mapping payloads, "
                             f"output_variable_name={name}"
                         )
-                        raise _InvalidSubmittedDataError(msg)
+                        raise exc.InvalidSubmittedDataError(msg)
                     restored_data[name] = build_segment([
                         self._restore_file_value(
                             output_variable_name=name,
@@ -471,7 +467,7 @@ class HumanInputNode(Node[HumanInputNodeData]):
                             "HumanInput file list input expects a string, "
                             f"output_variable_name={name}, got={type(value).__name__}"
                         )
-                        raise _InvalidSubmittedDataError(msg)
+                        raise exc.InvalidSubmittedDataError(msg)
                     restored_data[name] = build_segment(value)
                 case _:
                     assert_never(form_input)
