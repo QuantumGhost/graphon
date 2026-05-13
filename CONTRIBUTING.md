@@ -107,7 +107,10 @@ make check
 ### Static Type Contracts
 
 Files named `*_type_contract.py` are static type-check contracts. Keep them next
-to the implementation they validate.
+to the implementation they validate, and use them for structural protocol
+implementations that do not nominally inherit the target protocol. If an
+implementation already subclasses a protocol directly, the inheritance is the
+contract and an extra type contract file is unnecessary.
 
 These files are included in repository type checks, but are excluded from
 published distributions with `tool.uv.build-backend.source-exclude` because they
