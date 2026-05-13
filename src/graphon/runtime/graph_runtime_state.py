@@ -238,9 +238,17 @@ class GraphProtocol(Protocol):
     to the runtime state.
     """
 
-    nodes: Mapping[str, NodeProtocol]
-    edges: Mapping[str, EdgeProtocol]
-    root_node: NodeProtocol
+    @property
+    @abstractmethod
+    def nodes(self) -> Mapping[str, NodeProtocol]: ...
+
+    @property
+    @abstractmethod
+    def edges(self) -> Mapping[str, EdgeProtocol]: ...
+
+    @property
+    @abstractmethod
+    def root_node(self) -> NodeProtocol: ...
 
     @abstractmethod
     def get_outgoing_edges(self, node_id: str) -> Sequence[EdgeProtocol]: ...

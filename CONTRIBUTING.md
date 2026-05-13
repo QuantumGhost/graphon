@@ -104,6 +104,15 @@ make check
 `make test` applies local fixes, runs `ty check`, and then runs the test suite.
 `make check` then confirms the non-mutating CI check job will pass.
 
+### Static Type Contracts
+
+Files named `*_type_contract.py` are static type-check contracts. Keep them next
+to the implementation they validate.
+
+These files are included in repository type checks, but are excluded from
+published distributions with `tool.uv.build-backend.source-exclude` because they
+are development-time guards rather than runtime package API.
+
 ### CI Checks
 
 Pull requests targeting `main` currently run three kinds of checks:
