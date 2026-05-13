@@ -791,3 +791,14 @@ class ResponseStreamCoordinator:
                 if state.active_session
                 else None
             )
+
+
+if TYPE_CHECKING:
+    from graphon.runtime.graph_runtime_state import ResponseStreamCoordinatorProtocol
+
+    # static assertion to ensure ResponseStreamCoordinator implements
+    # ResponseStreamCoordinatorProtocol.
+    def _assert_response_stream_coordinator_protocol(
+        coordinator: ResponseStreamCoordinator,
+    ) -> ResponseStreamCoordinatorProtocol:  # pyright: ignore[reportUnusedFunction]
+        return coordinator

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import mimetypes
 import typing as tp
 
@@ -21,6 +22,7 @@ class LLMFileSaver(tp.Protocol):
     LLM.
     """
 
+    @abc.abstractmethod
     def save_binary_string(
         self,
         data: bytes,
@@ -58,6 +60,7 @@ class LLMFileSaver(tp.Protocol):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def save_remote_url(self, url: str, file_type: FileType) -> File:
         """save_remote_url saves the file from a remote url returned by LLM.
 
@@ -198,3 +201,9 @@ def _validate_extension_override(extension_override: str | None) -> str | None:
             extension_override,
         )
     return extension_override
+
+
+if tp.TYPE_CHECKING:
+    # static assertion to ensure FileSaverImpl implements LLMFileSaver.
+    def _assert_llm_file_saver(saver: FileSaverImpl) -> LLMFileSaver:  # pyright: ignore[reportUnusedFunction]
+        return saver

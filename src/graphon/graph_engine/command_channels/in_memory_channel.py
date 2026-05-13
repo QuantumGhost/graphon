@@ -5,7 +5,7 @@ within a single process. Each instance handles commands for one workflow executi
 """
 
 from queue import Empty, Queue
-from typing import final
+from typing import TYPE_CHECKING, final
 
 from ..entities.commands import GraphEngineCommand
 
@@ -49,3 +49,13 @@ class InMemoryChannel:
 
         """
         self._queue.put(command)
+
+
+if TYPE_CHECKING:
+    from .protocol import CommandChannel
+
+    # static assertion to ensure InMemoryChannel implements CommandChannel.
+    def _assert_command_channel(
+        channel: InMemoryChannel,
+    ) -> CommandChannel:  # pyright: ignore[reportUnusedFunction]
+        return channel

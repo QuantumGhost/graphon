@@ -1,3 +1,4 @@
+import abc
 import logging
 from collections.abc import Sequence
 from pathlib import Path
@@ -8,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class _TokenizerProtocol(Protocol):
+    @abc.abstractmethod
     def encode(self, text: str) -> Sequence[int]: ...
 
 

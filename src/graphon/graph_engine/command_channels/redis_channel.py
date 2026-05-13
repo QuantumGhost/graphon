@@ -5,9 +5,10 @@ multi-instance deployments and cross-server communication.
 Each instance uses a unique key for its command queue.
 """
 
+import abc
 import json
 from contextlib import AbstractContextManager
-from typing import Any, Protocol, final
+from typing import TYPE_CHECKING, Any, Protocol, final
 
 from ..entities.commands import (
     AbortCommand,
@@ -27,18 +28,26 @@ _COMMAND_MODEL_BY_TYPE: dict[CommandType, type[GraphEngineCommand]] = {
 class RedisPipelineProtocol(Protocol):
     """Minimal Redis pipeline contract used by the command channel."""
 
+    @abc.abstractmethod
     def lrange(self, name: str, start: int, end: int) -> Any: ...
+    @abc.abstractmethod
     def delete(self, *names: str) -> Any: ...
+    @abc.abstractmethod
     def execute(self) -> list[Any]: ...
+    @abc.abstractmethod
     def rpush(self, name: str, *values: str) -> Any: ...
+    @abc.abstractmethod
     def expire(self, name: str, time: int) -> Any: ...
+    @abc.abstractmethod
     def set(self, name: str, value: str, ex: int | None = None) -> Any: ...
+    @abc.abstractmethod
     def get(self, name: str) -> Any: ...
 
 
 class RedisClientProtocol(Protocol):
     """Redis client contract required by the command channel."""
 
+    @abc.abstractmethod
     def pipeline(self) -> AbstractContextManager[RedisPipelineProtocol]: ...
 
 
@@ -160,3 +169,13 @@ class RedisChannel:
             pending_value, _ = pipe.execute()
 
         return pending_value is not None
+
+
+if TYPE_CHECKING:
+    from .protocol import CommandChannel
+
+    # static assertion to ensure RedisChannel implements CommandChannel.
+    def _assert_command_channel(
+        channel: RedisChannel,
+    ) -> CommandChannel:  # pyright: ignore[reportUnusedFunction]
+        return channel

@@ -4,6 +4,7 @@ This protocol defines the interface for sending and receiving commands
 to/from a GraphEngine instance, supporting both local and distributed scenarios.
 """
 
+import abc
 from typing import Protocol
 
 from ..entities.commands import GraphEngineCommand
@@ -16,6 +17,7 @@ class CommandChannel(Protocol):
     this channel is dedicated to that single execution.
     """
 
+    @abc.abstractmethod
     def fetch_commands(self) -> list[GraphEngineCommand]:
         """Fetch pending commands for this GraphEngine instance.
 
@@ -27,6 +29,7 @@ class CommandChannel(Protocol):
         """
         ...
 
+    @abc.abstractmethod
     def send_command(self, command: GraphEngineCommand) -> None:
         """Send a command to be processed by this GraphEngine instance.
 

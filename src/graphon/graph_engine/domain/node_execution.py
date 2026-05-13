@@ -1,6 +1,7 @@
 """NodeExecution entity representing a node's execution state."""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from graphon.enums import NodeState
 
@@ -40,3 +41,13 @@ class NodeExecution:
     def increment_retry(self) -> None:
         """Increment the retry count for this node."""
         self.retry_count += 1
+
+
+if TYPE_CHECKING:
+    from graphon.runtime.graph_runtime_state import NodeExecutionProtocol
+
+    # static assertion to ensure NodeExecution implements NodeExecutionProtocol.
+    def _assert_node_execution_protocol(
+        execution: NodeExecution,
+    ) -> NodeExecutionProtocol:  # pyright: ignore[reportUnusedFunction]
+        return execution

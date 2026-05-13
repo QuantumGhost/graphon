@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
+from typing import TYPE_CHECKING
 
 from graphon.model_runtime.entities.llm_entities import LLMUsage
 from graphon.variables.segments import Segment
@@ -72,3 +73,18 @@ class ReadOnlyGraphRuntimeStateWrapper:
     def dumps(self) -> str:
         """Serialize the underlying runtime state for external persistence."""
         return self._state.dumps()
+
+
+if TYPE_CHECKING:
+    from .graph_runtime_state_protocol import ReadOnlyGraphRuntimeState
+
+    # static assertions to ensure read-only wrappers implement their protocols.
+    def _assert_readonly_variable_pool_wrapper(
+        pool: ReadOnlyVariablePoolWrapper,
+    ) -> ReadOnlyVariablePool:  # pyright: ignore[reportUnusedFunction]
+        return pool
+
+    def _assert_readonly_graph_runtime_state_wrapper(
+        state: ReadOnlyGraphRuntimeStateWrapper,
+    ) -> ReadOnlyGraphRuntimeState:  # pyright: ignore[reportUnusedFunction]
+        return state

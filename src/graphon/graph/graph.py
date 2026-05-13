@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import abc
 import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import Any, Protocol, final
+from typing import TYPE_CHECKING, Any, Protocol, final
 
 from pydantic import TypeAdapter
 
@@ -27,6 +28,7 @@ class NodeFactory(Protocol):
     allowing for different node creation strategies while maintaining type safety.
     """
 
+    @abc.abstractmethod
     def create_node(self, node_config: NodeConfigDict) -> Node:
         """Create a Node instance from node configuration data.
 
@@ -517,3 +519,13 @@ class GraphBuilder:
             msg = f"Duplicate node id detected: {node.id}"
             raise ValueError(msg)
         self._nodes_by_id[node.id] = node
+
+
+if TYPE_CHECKING:
+    from graphon.runtime.graph_runtime_state import GraphProtocol
+
+    # static assertion to ensure Graph implements GraphProtocol.
+    def _assert_graph_protocol(
+        graph: Graph,
+    ) -> GraphProtocol:  # pyright: ignore[reportUnusedFunction]
+        return graph

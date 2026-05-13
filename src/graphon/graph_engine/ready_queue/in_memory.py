@@ -5,7 +5,7 @@ serialization capabilities for state storage.
 """
 
 import queue
-from typing import final
+from typing import TYPE_CHECKING, final
 
 from .protocol import ReadyQueue, ReadyQueueState
 
@@ -137,3 +137,9 @@ class InMemoryReadyQueue(ReadyQueue):
         # Restore items
         for item in state.items:
             self._queue.put(item)
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure InMemoryReadyQueue implements ReadyQueue.
+    def _assert_ready_queue(queue_impl: InMemoryReadyQueue) -> ReadyQueue:  # pyright: ignore[reportUnusedFunction]
+        return queue_impl

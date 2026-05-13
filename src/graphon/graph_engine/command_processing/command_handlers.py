@@ -1,5 +1,5 @@
 import logging
-from typing import final, override
+from typing import TYPE_CHECKING, final, override
 
 from graphon.entities.pause_reason import SchedulingPause
 from graphon.runtime.graph_runtime_state import GraphExecutionProtocol
@@ -69,3 +69,21 @@ class UpdateVariablesCommandHandler(CommandHandler[UpdateVariablesCommand]):
                     execution.workflow_id,
                     exc,
                 )
+
+
+if TYPE_CHECKING:
+    # static assertions to ensure command handlers implement CommandHandler.
+    def _assert_abort_handler_protocol(
+        handler: AbortCommandHandler,
+    ) -> CommandHandler[AbortCommand]:  # pyright: ignore[reportUnusedFunction]
+        return handler
+
+    def _assert_pause_handler_protocol(
+        handler: PauseCommandHandler,
+    ) -> CommandHandler[PauseCommand]:  # pyright: ignore[reportUnusedFunction]
+        return handler
+
+    def _assert_update_variables_handler_protocol(
+        handler: UpdateVariablesCommandHandler,
+    ) -> CommandHandler[UpdateVariablesCommand]:  # pyright: ignore[reportUnusedFunction]
+        return handler

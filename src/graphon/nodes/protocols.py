@@ -1,3 +1,4 @@
+import abc
 from collections.abc import Generator, Mapping
 from typing import Any, Protocol
 
@@ -6,10 +7,12 @@ from graphon.http.protocols import HttpClientProtocol
 
 
 class FileManagerProtocol(Protocol):
+    @abc.abstractmethod
     def download(self, f: File, /) -> bytes: ...
 
 
 class ToolFileManagerProtocol(Protocol):
+    @abc.abstractmethod
     def create_file_by_raw(
         self,
         *,
@@ -18,6 +21,7 @@ class ToolFileManagerProtocol(Protocol):
         filename: str | None = None,
     ) -> Any: ...
 
+    @abc.abstractmethod
     def get_file_generator_by_tool_file_id(
         self,
         tool_file_id: str,
@@ -29,6 +33,7 @@ class FileReferenceFactoryProtocol(Protocol):
     format. It enforces approriate permission filtering for the file.
     """
 
+    @abc.abstractmethod
     def build_from_mapping(self, *, mapping: Mapping[str, Any]) -> File: ...
 
 

@@ -122,3 +122,13 @@ class HttpResponse:
     def raise_for_status(self) -> None:
         if not self.is_success:
             raise HttpStatusError(self)
+
+
+if TYPE_CHECKING:
+    from .protocols import HttpResponseProtocol
+
+    # static assertion to ensure HttpResponse implements HttpResponseProtocol.
+    def _assert_http_response_protocol(
+        response: HttpResponse,
+    ) -> HttpResponseProtocol:  # pyright: ignore[reportUnusedFunction]
+        return response

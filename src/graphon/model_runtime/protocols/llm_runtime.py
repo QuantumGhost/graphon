@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from collections.abc import Generator, Sequence
 from typing import Any, Literal, Protocol, overload, runtime_checkable
 
@@ -22,6 +23,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
     """Runtime surface required by LLM-backed model wrappers."""
 
     @overload
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -36,6 +38,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
     ) -> LLMResult: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -49,6 +52,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
         stream: Literal[True],
     ) -> Generator[LLMResultChunk, None, None]: ...
 
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -63,6 +67,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
     ) -> LLMResult | Generator[LLMResultChunk, None, None]: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -77,6 +82,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
     ) -> LLMResultWithStructuredOutput: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -90,6 +96,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
         stream: Literal[True],
     ) -> Generator[LLMResultChunkWithStructuredOutput, None, None]: ...
 
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -106,6 +113,7 @@ class LLMModelRuntime(ModelProviderRuntime, Protocol):
         | Generator[LLMResultChunkWithStructuredOutput, None, None]
     ): ...
 
+    @abc.abstractmethod
     def get_llm_num_tokens(
         self,
         *,

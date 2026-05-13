@@ -26,6 +26,7 @@ class ToolNodeRuntimeProtocol(Protocol):
     translate between graph-owned abstractions and `core.tools` internals.
     """
 
+    @abc.abstractmethod
     def get_runtime(
         self,
         *,
@@ -35,12 +36,14 @@ class ToolNodeRuntimeProtocol(Protocol):
         node_execution_id: str | None = None,
     ) -> ToolRuntimeHandle: ...
 
+    @abc.abstractmethod
     def get_runtime_parameters(
         self,
         *,
         tool_runtime: ToolRuntimeHandle,
     ) -> Sequence[ToolRuntimeParameter]: ...
 
+    @abc.abstractmethod
     def invoke(
         self,
         *,
@@ -50,12 +53,14 @@ class ToolNodeRuntimeProtocol(Protocol):
         provider_name: str,
     ) -> Generator[ToolRuntimeMessage, None, None]: ...
 
+    @abc.abstractmethod
     def get_usage(
         self,
         *,
         tool_runtime: ToolRuntimeHandle,
     ) -> LLMUsage: ...
 
+    @abc.abstractmethod
     def build_file_reference(self, *, mapping: Mapping[str, Any]) -> Any: ...
 
 
@@ -85,6 +90,7 @@ class HumanInputNodeRuntimeProtocol(Protocol):
 class HumanInputFormRepositoryBindableRuntimeProtocol(Protocol):
     """Optional capability for runtimes that require explicit repository binding."""
 
+    @abc.abstractmethod
     def with_form_repository(
         self,
         form_repository: object,
@@ -130,22 +136,29 @@ def _normalize_human_input_runtime(
 
 class HumanInputFormStateProtocol(Protocol):
     @property
+    @abc.abstractmethod
     def id(self) -> str: ...
 
     @property
+    @abc.abstractmethod
     def rendered_content(self) -> str: ...
 
     @property
+    @abc.abstractmethod
     def selected_action_id(self) -> str | None: ...
 
     @property
+    @abc.abstractmethod
     def submitted_data(self) -> Mapping[str, Any] | None: ...
 
     @property
+    @abc.abstractmethod
     def submitted(self) -> bool: ...
 
     @property
+    @abc.abstractmethod
     def status(self) -> HumanInputFormStatus: ...
 
     @property
+    @abc.abstractmethod
     def expiration_time(self) -> datetime: ...

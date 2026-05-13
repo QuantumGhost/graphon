@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 import httpx
 
@@ -102,3 +102,11 @@ class HttpxHttpClient(HttpClientProtocol):
             )
 
         return request_kwargs
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure HttpxHttpClient implements HttpClientProtocol.
+    def _assert_http_client_protocol(
+        client: HttpxHttpClient,
+    ) -> HttpClientProtocol:  # pyright: ignore[reportUnusedFunction]
+        return client

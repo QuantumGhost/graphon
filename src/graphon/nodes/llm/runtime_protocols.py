@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any, Literal, Protocol, overload
 
@@ -22,25 +23,33 @@ class LLMProtocol(Protocol):
     """A graph-facing LLM runtime adapter for node execution."""
 
     @property
+    @abc.abstractmethod
     def provider(self) -> str: ...
 
     @property
+    @abc.abstractmethod
     def model_name(self) -> str: ...
 
     @property
+    @abc.abstractmethod
     def parameters(self) -> Mapping[str, Any]: ...
 
     @parameters.setter
+    @abc.abstractmethod
     def parameters(self, value: Mapping[str, Any]) -> None: ...
 
     @property
+    @abc.abstractmethod
     def stop(self) -> Sequence[str] | None: ...
 
+    @abc.abstractmethod
     def get_model_schema(self) -> AIModelEntity: ...
 
+    @abc.abstractmethod
     def get_llm_num_tokens(self, prompt_messages: Sequence[PromptMessage]) -> int: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -52,6 +61,7 @@ class LLMProtocol(Protocol):
     ) -> LLMResult: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -62,6 +72,7 @@ class LLMProtocol(Protocol):
         stream: Literal[True],
     ) -> Generator[LLMResultChunk, None, None]: ...
 
+    @abc.abstractmethod
     def invoke_llm(
         self,
         *,
@@ -73,6 +84,7 @@ class LLMProtocol(Protocol):
     ) -> LLMResult | Generator[LLMResultChunk, None, None]: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -84,6 +96,7 @@ class LLMProtocol(Protocol):
     ) -> LLMResultWithStructuredOutput: ...
 
     @overload
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -94,6 +107,7 @@ class LLMProtocol(Protocol):
         stream: Literal[True],
     ) -> Generator[LLMResultChunkWithStructuredOutput, None, None]: ...
 
+    @abc.abstractmethod
     def invoke_llm_with_structured_output(
         self,
         *,
@@ -107,12 +121,14 @@ class LLMProtocol(Protocol):
         | Generator[LLMResultChunkWithStructuredOutput, None, None]
     ): ...
 
+    @abc.abstractmethod
     def is_structured_output_parse_error(self, error: Exception) -> bool: ...
 
 
 class PromptMessageSerializerProtocol(Protocol):
     """Port for converting compiled prompt messages into persisted process data."""
 
+    @abc.abstractmethod
     def serialize(
         self,
         *,
@@ -124,4 +140,5 @@ class PromptMessageSerializerProtocol(Protocol):
 class RetrieverAttachmentLoaderProtocol(Protocol):
     """Port for resolving retriever segment attachments into graph file references."""
 
+    @abc.abstractmethod
     def load(self, *, segment_id: str) -> Sequence[File]: ...

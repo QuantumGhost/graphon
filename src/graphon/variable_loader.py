@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from graphon.runtime.variable_pool import VariablePool
 from graphon.variables.consts import SELECTORS_LENGTH
@@ -43,6 +43,14 @@ class _DummyVariableLoader(VariableLoader):
     def load_variables(self, selectors: list[list[str]]) -> list[VariableBase]:
         _ = selectors
         return []
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure _DummyVariableLoader implements VariableLoader.
+    def _assert_variable_loader(
+        loader: _DummyVariableLoader,
+    ) -> VariableLoader:  # pyright: ignore[reportUnusedFunction]
+        return loader
 
 
 DUMMY_VARIABLE_LOADER = _DummyVariableLoader()

@@ -4,7 +4,7 @@ import base64
 from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from graphon.file.models import File
 from graphon.model_runtime.entities.llm_entities import LLMUsage
@@ -896,3 +896,12 @@ def _decode_blob(value: object) -> bytes:
             raise ToolNodeError(msg) from error
     msg = "Slim blob payload must be bytes or base64 text."
     raise ToolNodeError(msg)
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure SlimToolNodeRuntime implements
+    # ToolNodeRuntimeProtocol.
+    def _assert_slim_tool_node_runtime_protocol(
+        runtime: SlimToolNodeRuntime,
+    ) -> ToolNodeRuntimeProtocol:  # pyright: ignore[reportUnusedFunction]
+        return runtime

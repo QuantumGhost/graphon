@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, overload, override
+from typing import TYPE_CHECKING, Any, Literal, overload, override
 
 from pydantic import StrictStr, TypeAdapter, ValidationError
 
@@ -682,3 +682,11 @@ def _parse_optional_llm_usage(payload: object) -> LLMUsage | None:
             raise TypeError(msg)
         normalized_payload[key] = value
     return LLMUsage.from_metadata(normalized_payload)
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure SlimLLM implements LLMProtocol.
+    def _assert_slim_llm_protocol(
+        runtime: SlimLLM,
+    ) -> LLMProtocol:  # pyright: ignore[reportUnusedFunction]
+        return runtime

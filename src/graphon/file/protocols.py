@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Literal, Protocol
 
@@ -18,8 +19,10 @@ class WorkflowFileRuntimeProtocol(Protocol):
     """
 
     @property
+    @abc.abstractmethod
     def multimodal_send_format(self) -> str: ...
 
+    @abc.abstractmethod
     def http_get(
         self,
         url: str,
@@ -27,10 +30,13 @@ class WorkflowFileRuntimeProtocol(Protocol):
         follow_redirects: bool = True,
     ) -> HttpResponseProtocol: ...
 
+    @abc.abstractmethod
     def storage_load(self, path: str, *, stream: bool = False) -> bytes | Generator: ...
 
+    @abc.abstractmethod
     def load_file_bytes(self, *, file: File) -> bytes: ...
 
+    @abc.abstractmethod
     def resolve_file_url(
         self,
         *,
@@ -38,6 +44,7 @@ class WorkflowFileRuntimeProtocol(Protocol):
         for_external: bool = True,
     ) -> str | None: ...
 
+    @abc.abstractmethod
     def resolve_upload_file_url(
         self,
         *,
@@ -46,6 +53,7 @@ class WorkflowFileRuntimeProtocol(Protocol):
         for_external: bool = True,
     ) -> str: ...
 
+    @abc.abstractmethod
     def resolve_tool_file_url(
         self,
         *,
@@ -54,6 +62,7 @@ class WorkflowFileRuntimeProtocol(Protocol):
         for_external: bool = True,
     ) -> str: ...
 
+    @abc.abstractmethod
     def verify_preview_signature(
         self,
         *,
