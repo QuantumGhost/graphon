@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 from collections.abc import Generator, Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
@@ -62,12 +63,14 @@ class ToolNodeRuntimeProtocol(Protocol):
 class HumanInputNodeRuntimeProtocol(Protocol):
     """Workflow-layer adapter for human-input runtime persistence and delivery."""
 
+    @abc.abstractmethod
     def get_form(
         self,
         *,
         node_id: str,
     ) -> HumanInputFormStateProtocol | None: ...
 
+    @abc.abstractmethod
     def create_form(
         self,
         *,

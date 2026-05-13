@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import Field
 
 from graphon.entities.pause_reason import PauseReason
+from graphon.variables.segments import Segment
 from graphon.variables.variables import Variable
 
 from .base import GraphNodeEventBase
@@ -90,6 +91,10 @@ class NodeRunHumanInputFormFilledEvent(GraphNodeEventBase):
     action_text: str = Field(
         ...,
         description="Display text of the chosen action button.",
+    )
+    submitted_data: Mapping[str, Segment] = Field(
+        default_factory=dict,
+        description="Runtime submitted values keyed by form output variable name.",
     )
 
 

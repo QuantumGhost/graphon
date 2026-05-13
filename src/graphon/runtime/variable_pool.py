@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from typing import Annotated, Any, Self
+from typing import TYPE_CHECKING, Annotated, Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -43,6 +43,9 @@ class VariablePool(BaseModel):
     # It's the first-level key in the dictionary.
     # Other elements of the selector are keys in the second-level dictionary.
     # To get the key, we hash the elements of the selector except the first one.
+    #
+    # The `variable_dictionary` is the source of truth for the runtime
+    # value of variables.
     variable_dictionary: defaultdict[
         str,
         Annotated[dict[str, Variable], Field(default_factory=dict)],
@@ -368,3 +371,12 @@ class VariablePool(BaseModel):
     def empty(cls) -> VariablePool:
         """Create an empty variable pool."""
         return cls()
+
+
+if TYPE_CHECKING:
+    # static assertion to ensure VariablePool implements the
+    # ReadOnlyVariablePool.
+    from .graph_runtime_state_protocol import ReadOnlyVariablePool
+
+    def _assert_readonly_variable_pool(pool: VariablePool) -> ReadOnlyVariablePool:  # pyright: ignore[reportUnusedFunction]
+        return pool

@@ -25,6 +25,10 @@ class ToolFileManagerProtocol(Protocol):
 
 
 class FileReferenceFactoryProtocol(Protocol):
+    """FileReferenceFactoryProtocol recreates File object from serialized JSON
+    format. It enforces approriate permission filtering for the file.
+    """
+
     def build_from_mapping(self, *, mapping: Mapping[str, Any]) -> File: ...
 
 
