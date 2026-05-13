@@ -4,7 +4,7 @@ import abc
 import logging
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Protocol, final
+from typing import Any, Protocol, final
 
 from pydantic import TypeAdapter
 
@@ -519,13 +519,3 @@ class GraphBuilder:
             msg = f"Duplicate node id detected: {node.id}"
             raise ValueError(msg)
         self._nodes_by_id[node.id] = node
-
-
-if TYPE_CHECKING:
-    from graphon.runtime.graph_runtime_state import GraphProtocol
-
-    # static assertion to ensure Graph implements GraphProtocol.
-    def _assert_graph_protocol(
-        graph: Graph,
-    ) -> GraphProtocol:  # pyright: ignore[reportUnusedFunction]
-        return graph
