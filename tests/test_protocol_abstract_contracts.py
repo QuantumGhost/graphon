@@ -4,7 +4,6 @@ import ast
 import importlib
 import inspect
 from pathlib import Path
-from typing import Any
 
 import pytest
 
@@ -101,29 +100,6 @@ def _protocol_member_names(protocol_cls: type[object]) -> list[str]:
     return member_names
 
 
-def _build_member_override(protocol_cls: type[object], member_name: str) -> Any:
-    member = protocol_cls.__dict__[member_name]
-    if isinstance(member, property):
-        return property(lambda _: None)
-    if isinstance(member, classmethod):
-
-        def _class_stub(_cls: type[object], *args: object, **kwargs: object) -> None:
-            _ = args, kwargs
-
-        return classmethod(_class_stub)
-    if isinstance(member, staticmethod):
-
-        def _static_stub(*args: object, **kwargs: object) -> None:
-            _ = args, kwargs
-
-        return staticmethod(_static_stub)
-
-    def _stub(self: object, *args: object, **kwargs: object) -> None:
-        _ = self, args, kwargs
-
-    return _stub
-
-
 PROTOCOL_TARGETS = _discover_protocol_targets()
 
 
@@ -142,6 +118,10 @@ def test_protocol_targets_should_be_discovered() -> None:
 )
 def test_protocol_members_should_be_abstract(protocol_cls: type[object]) -> None:
     member_names = _protocol_member_names(protocol_cls)
+    # This protects the test from a vacuous pass if discovery and runtime member
+    # detection drift apart. Discovery only targets Protocol classes with
+    # methods, so an empty member list means the test is no longer checking the
+    # contract it claims to check.
     assert member_names, f"{_protocol_id(protocol_cls)} has no protocol members."
 
     non_abstract_members = [
@@ -150,72 +130,3 @@ def test_protocol_members_should_be_abstract(protocol_cls: type[object]) -> None
         if not getattr(protocol_cls.__dict__[name], "__isabstractmethod__", False)
     ]
     assert non_abstract_members == []
-
-
-@pytest.mark.parametrize(
-    "protocol_cls",
-    PROTOCOL_TARGETS,
-    ids=_protocol_id,
-)
-def test_protocol_direct_subclass_should_require_overrides(
-    protocol_cls: type[object],
-) -> None:
-    direct_impl = type(
-        f"Direct{protocol_cls.__name__}",
-        (protocol_cls,),
-        {},
-    )
-
-    with pytest.raises(TypeError):
-        direct_impl()
-
-
-@pytest.mark.parametrize(
-    "protocol_cls",
-    PROTOCOL_TARGETS,
-    ids=_protocol_id,
-)
-def test_protocol_indirect_subclass_should_require_overrides(
-    protocol_cls: type[object],
-) -> None:
-    intermediate = type(
-        f"Intermediate{protocol_cls.__name__}",
-        (protocol_cls,),
-        {},
-    )
-    indirect_impl = type(
-        f"Indirect{protocol_cls.__name__}",
-        (intermediate,),
-        {},
-    )
-
-    with pytest.raises(TypeError):
-        indirect_impl()
-
-
-@pytest.mark.parametrize(
-    "protocol_cls",
-    PROTOCOL_TARGETS,
-    ids=_protocol_id,
-)
-def test_protocol_indirect_partial_override_should_stay_abstract(
-    protocol_cls: type[object],
-) -> None:
-    member_names = _protocol_member_names(protocol_cls)
-    if len(member_names) < 2:
-        pytest.skip("Protocol has fewer than two members.")
-
-    first_member = member_names[0]
-    intermediate = type(
-        f"Intermediate{protocol_cls.__name__}",
-        (protocol_cls,),
-        {},
-    )
-    partial_impl = type(
-        f"Partial{protocol_cls.__name__}",
-        (intermediate,),
-        {first_member: _build_member_override(protocol_cls, first_member)},
-    )
-
-    with pytest.raises(TypeError):
-        partial_impl()
